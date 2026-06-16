@@ -19,16 +19,15 @@ const {
 const { estToUTC } = require("./utils/time");
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
-const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID;
 
 function isStaff(member) {
-    return member?.roles?.cache?.has(STAFF_ROLE_ID);
+    return member?.roles?.cache?.has(process.env.STAFF_ROLE_ID);
 }
 
 const commands = [
@@ -37,7 +36,7 @@ const commands = [
         .setDescription("Link Roblox account")
         .addStringOption(o =>
             o.setName("robloxid")
-                .setDescription("Your Roblox User ID")
+                .setDescription("Roblox ID")
                 .setRequired(true)
         ),
 
@@ -45,96 +44,67 @@ const commands = [
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
         .addStringOption(o =>
-            o.setName("title")
-                .setDescription("Release title")
-                .setRequired(true)
+            o.setName("title").setDescription("Title").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("date")
-                .setDescription("Release date (EST)")
-                .setRequired(true)
+            o.setName("date").setDescription("Date").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("format")
-                .setDescription("Release format message")
-                .setRequired(true)
+            o.setName("format").setDescription("Format").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("preview")
-                .setDescription("Preview URL")
+            o.setName("preview").setDescription("Preview URL")
         ),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
         .addStringOption(o =>
-            o.setName("title")
-                .setDescription("Hunt title")
-                .setRequired(true)
+            o.setName("title").setDescription("Title").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("ugc")
-                .setDescription("UGC item name")
-                .setRequired(true)
+            o.setName("ugc").setDescription("UGC").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("rules")
-                .setDescription("Hunt rules")
-                .setRequired(true)
+            o.setName("rules").setDescription("Rules").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("start")
-                .setDescription("Start time")
-                .setRequired(true)
+            o.setName("start").setDescription("Start date").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("end")
-                .setDescription("End time")
-                .setRequired(true)
+            o.setName("end").setDescription("End date").setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("editcollection")
         .setDescription("Edit scheduled event")
         .addStringOption(o =>
-            o.setName("type")
-                .setDescription("fashion | hunt | paid")
-                .setRequired(true)
+            o.setName("type").setDescription("type").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("id")
-                .setDescription("Event ID")
-                .setRequired(true)
+            o.setName("id").setDescription("id").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("title")
-                .setDescription("New title")
+            o.setName("title").setDescription("title")
         )
         .addStringOption(o =>
-            o.setName("date")
-                .setDescription("New date")
+            o.setName("date").setDescription("date")
         )
         .addStringOption(o =>
-            o.setName("format")
-                .setDescription("New format")
+            o.setName("format").setDescription("format")
         )
         .addStringOption(o =>
-            o.setName("preview")
-                .setDescription("New preview URL")
+            o.setName("preview").setDescription("preview")
         ),
 
     new SlashCommandBuilder()
         .setName("cancelrelease")
         .setDescription("Cancel scheduled event")
         .addStringOption(o =>
-            o.setName("type")
-                .setDescription("fashion | hunt | paid")
-                .setRequired(true)
+            o.setName("type").setDescription("type").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("id")
-                .setDescription("Event ID")
-                .setRequired(true)
+            o.setName("id").setDescription("id").setRequired(true)
         )
 ].map(c => c.toJSON());
 
@@ -157,29 +127,31 @@ client.on("interactionCreate", async (i) => {
     if (i.commandName === "verify") {
         const robloxId = i.options.getString("robloxid");
 
-        await i.deferReply({ ephemeral: true });
-
         try {
-            const res = await axios.post(
-                `${process.env.API_URL}/api/verify`,
-                {
-                    robloxId: Number(robloxId),
-                    discordId: i.user.id,
-                    apiKey: process.env.API_KEY
-                }
-            );
+            const res = await axios.post(process.env.API_URL + "/api/verify", {
+                robloxId: Number(robloxId),
+                discordId: i.user.id,
+                apiKey: process.env.API_KEY
+            });
 
-            if (!res.data?.success) {
-                return i.editReply(res.data?.message || "Verification failed.");
-            }
+            return i.reply({
+                content: res.data.success
+                    ? "Verified successfully!"
+                    : (res.data.message || "Verification failed."),
+                ephemeral: true
+            });
 
-            return i.editReply("Verified successfully!");
-        } catch (err) {
-            return i.editReply("Server error during verification.");
+        } catch {
+            return i.reply({
+                content: "Server error during verification.",
+                ephemeral: true
+            });
         }
     }
 
-    if (!isStaff(i.member) && i.commandName !== "verify") {
+    const member = await i.guild.members.fetch(i.user.id);
+
+    if (i.commandName !== "verify" && !isStaff(member)) {
         return i.reply({ content: "Staff only.", ephemeral: true });
     }
 
@@ -189,12 +161,7 @@ client.on("interactionCreate", async (i) => {
         const format = i.options.getString("format");
         const preview = i.options.getString("preview") || "";
 
-        await FashionRelease.create({
-            title,
-            releaseDate: date,
-            format,
-            previewUrl: preview
-        });
+        await FashionRelease.create({ title, releaseDate: date, format, previewUrl: preview });
 
         return i.reply({ content: "Fashion scheduled.", ephemeral: true });
     }
@@ -207,13 +174,7 @@ client.on("interactionCreate", async (i) => {
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
 
-        await ScavengerHunt.create({
-            title,
-            ugcName: ugc,
-            rules,
-            startDate: start,
-            endDate: end
-        });
+        await ScavengerHunt.create({ title, ugcName: ugc, rules, startDate: start, endDate: end });
 
         return i.reply({ content: "Hunt scheduled.", ephemeral: true });
     }
@@ -222,7 +183,7 @@ client.on("interactionCreate", async (i) => {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
 
-        let Model =
+        const Model =
             type === "fashion" ? FashionRelease :
             type === "hunt" ? ScavengerHunt :
             PaidLimited;
@@ -243,7 +204,7 @@ client.on("interactionCreate", async (i) => {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
 
-        let Model =
+        const Model =
             type === "fashion" ? FashionRelease :
             type === "hunt" ? ScavengerHunt :
             PaidLimited;
