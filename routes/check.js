@@ -9,16 +9,22 @@ router.get("/check", async (req, res) => {
         return res.json({ verified: false });
     }
 
-    const user = await User.findOne({ robloxId });
+    try {
+        const user = await User.findOne({ robloxId });
 
-    if (!user || !user.verified) {
+        if (!user || !user.verified) {
+            return res.json({ verified: false });
+        }
+
+        return res.json({
+            verified: true,
+            discordId: user.discordId
+        });
+
+    } catch (err) {
+        console.error(err);
         return res.json({ verified: false });
     }
-
-    return res.json({
-        verified: true,
-        discordId: user.discordId
-    });
 });
 
 module.exports = router;
