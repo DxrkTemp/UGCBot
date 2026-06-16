@@ -60,7 +60,7 @@ const commands = [
     new SlashCommandBuilder()
         .setName("editcollection")
         .setDescription("Edit scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true)) // fashion | hunt | paid
+        .addStringOption(o => o.setName("type").setRequired(true))
         .addStringOption(o => o.setName("id").setRequired(true))
         .addStringOption(o => o.setName("title"))
         .addStringOption(o => o.setName("date"))
