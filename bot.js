@@ -60,20 +60,27 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         try {
-            await axios.post(API_URL, {
+            const res = await axios.post(API_URL, {
                 robloxId: Number(robloxId),
                 discordId: interaction.user.id,
                 apiKey: API_KEY
             });
-
+        
+            if (!res.data.success) {
+                return interaction.reply({
+                    content: res.data.message || "Verification failed.",
+                    ephemeral: true
+                });
+            }
+        
             return interaction.reply({
                 content: "Successfully verified! You can now join the UGC quest.",
                 ephemeral: true
             });
-
+        
         } catch (err) {
             console.error(err);
-
+        
             return interaction.reply({
                 content: "Verification failed. Try again later.",
                 ephemeral: true
