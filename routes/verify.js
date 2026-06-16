@@ -15,29 +15,39 @@ router.post("/verify", async (req, res) => {
         return res.json({ success: false, message: "Missing data" });
     }
 
-    const existingDiscord = await User.findOne({ discordId });
-    if (existingDiscord) {
+    try {
+        const discordExists = await User.findOne({ discordId });
+        if (discordExists) {
+            return res.json({
+                success: false,
+                message: "This Discord account is already linked to a Roblox account."
+            });
+        }
+
+        const robloxExists = await User.findOne({ robloxId });
+        if (robloxExists) {
+            return res.json({
+                success: false,
+                message: "This Roblox account is already linked."
+            });
+        }
+
+        await User.create({
+            robloxId,
+            discordId,
+            verified: true
+        });
+
+        return res.json({ success: true });
+
+    } catch (err) {
+        console.error("VERIFY ERROR:", err);
+
         return res.json({
             success: false,
-            message: "This Discord account is already verified to a Roblox account."
+            message: "Already verified or database conflict."
         });
     }
-
-    const existingRoblox = await User.findOne({ robloxId });
-    if (existingRoblox) {
-        return res.json({
-            success: false,
-            message: "This Roblox account is already verified."
-        });
-    }
-
-    await User.create({
-        robloxId,
-        discordId,
-        verified: true
-    });
-
-    return res.json({ success: true });
 });
 
 module.exports = router;
