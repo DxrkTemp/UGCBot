@@ -6,14 +6,20 @@ const connectDB = async () => {
 };
 
 const UserSchema = new mongoose.Schema({
-    robloxId: { type: Number, required: true },
+    robloxId: { type: Number, unique: true, required: true },
     discordId: { type: String, required: true },
-    verified: { type: Boolean, default: true }
+    verified: { type: Boolean, default: false },
+    claimed: { type: Boolean, default: false }
 });
 
-UserSchema.index({ robloxId: 1 }, { unique: true });
-UserSchema.index({ discordId: 1 }, { unique: true });
+const FashionRelease = require("./models/FashionRelease");
+const ScavengerHunt = require("./models/ScavengerHunt");
+const PaidLimited = require("./models/PaidLimited");
 
-const User = mongoose.model("User", UserSchema);
-
-module.exports = { connectDB, User };
+module.exports = {
+    connectDB,
+    User: mongoose.model("User", UserSchema),
+    FashionRelease,
+    ScavengerHunt,
+    PaidLimited
+};
