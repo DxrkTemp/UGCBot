@@ -6,8 +6,8 @@ const connectDB = async () => {
 };
 
 const UserSchema = new mongoose.Schema({
-    robloxId: { type: Number, required: true, unique: true },
-    discordId: { type: String, required: true, unique: true },
+    robloxId: { type: Number, required: true },
+    discordId: { type: String, required: true },
     verified: { type: Boolean, default: true }
 });
 
