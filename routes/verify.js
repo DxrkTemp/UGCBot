@@ -4,31 +4,63 @@ const { User } = require("../db");
 
 const API_KEY = process.env.API_KEY;
 
+const requestMap = new Map();
+
 router.post("/verify", async (req, res) => {
-    const { robloxId, discordId, apiKey } = req.body;
-
-    if (apiKey !== API_KEY) {
-        return res.json({ success: false, message: "Unauthorized" });
-    }
-
-    if (!robloxId || !discordId) {
-        return res.json({ success: false, message: "Missing data" });
-    }
-
     try {
-        const discordExists = await User.findOne({ discordId });
-        if (discordExists) {
+
+        const ip = req.ip;
+
+        const last = requestMap.get(ip);
+        const now = Date.now();
+
+        if (last && now - last < 5000) {
             return res.json({
                 success: false,
-                message: "This Discord account is already linked to a Roblox account."
+                message: "Too many requests. Try again later."
             });
         }
 
-        const robloxExists = await User.findOne({ robloxId });
-        if (robloxExists) {
+        requestMap.set(ip, now);
+
+        const { robloxId, discordId, apiKey } = req.body;
+
+        if (apiKey !== API_KEY) {
             return res.json({
                 success: false,
-                message: "This Roblox account is already linked."
+                message: "Unauthorized"
+            });
+        }
+
+        if (!robloxId || !discordId) {
+            return res.json({
+                success: false,
+                message: "Missing data"
+            });
+        }
+
+        if (isNaN(robloxId)) {
+            return res.json({
+                success: false,
+                message: "Invalid Roblox ID"
+            });
+        }
+
+        const existingDiscord = await User.findOne({ discordId });
+
+        if (existingDiscord) {
+            return res.json({
+                success: false,
+                message: "Discord already linked to roblox account"
+            });
+        }
+
+        const existingRoblox = await User.findOne({ robloxId });
+
+        if (existingRoblox) {
+            return res.json({
+                success: false,
+                message: "Roblox already linked to discord account"
             });
         }
 
@@ -38,14 +70,17 @@ router.post("/verify", async (req, res) => {
             verified: true
         });
 
-        return res.json({ success: true });
+        return res.json({
+            success: true,
+            message: "Verified successfully"
+        });
 
     } catch (err) {
-        console.error("VERIFY ERROR:", err);
+        console.error("Verify error:", err);
 
-        return res.json({
+        return res.status(500).json({
             success: false,
-            message: "Already verified or database conflict."
+            message: "Server error"
         });
     }
 });
