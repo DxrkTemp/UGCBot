@@ -32,47 +32,110 @@ function isStaff(member) {
 }
 
 const commands = [
-
     new SlashCommandBuilder()
         .setName("verify")
         .setDescription("Link Roblox account")
         .addStringOption(o =>
-            o.setName("robloxid").setRequired(true)
+            o.setName("robloxid")
+                .setDescription("Your Roblox User ID")
+                .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("date").setRequired(true))
-        .addStringOption(o => o.setName("format").setRequired(true))
-        .addStringOption(o => o.setName("preview").setRequired(false)),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Collection title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("Release date")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("format")
+                .setDescription("Announcement format")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("preview")
+                .setDescription("Preview URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("ugc").setRequired(true))
-        .addStringOption(o => o.setName("rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setRequired(true))
-        .addStringOption(o => o.setName("end").setRequired(true)),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("ugc")
+                .setDescription("UGC reward")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("rules")
+                .setDescription("Rules")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("start")
+                .setDescription("Start date")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("end")
+                .setDescription("End date")
+                .setRequired(true)
+        ),
 
     new SlashCommandBuilder()
         .setName("editcollection")
         .setDescription("Edit scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true)) // fashion | hunt | paid
-        .addStringOption(o => o.setName("id").setRequired(true))
-        .addStringOption(o => o.setName("title"))
-        .addStringOption(o => o.setName("date"))
-        .addStringOption(o => o.setName("format"))
-        .addStringOption(o => o.setName("preview")),
+        .addStringOption(o =>
+            o.setName("type")
+                .setDescription("fashion | hunt | paid")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("id")
+                .setDescription("Event ID")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("New title")
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("New date")
+        )
+        .addStringOption(o =>
+            o.setName("format")
+                .setDescription("New format")
+        )
+        .addStringOption(o =>
+            o.setName("preview")
+                .setDescription("New preview URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("cancelrelease")
         .setDescription("Cancel scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true))
-        .addStringOption(o => o.setName("id").setRequired(true))
-
+        .addStringOption(o =>
+            o.setName("type")
+                .setDescription("fashion | hunt | paid")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("id")
+                .setDescription("Event ID")
+                .setRequired(true)
+        )
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -91,7 +154,6 @@ client.once("ready", () => {
 client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
-    // VERIFY
     if (i.commandName === "verify") {
         const robloxId = i.options.getString("robloxid");
 
@@ -147,16 +209,16 @@ client.on("interactionCreate", async (i) => {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
 
-        let Model =
-            type === "fashion" ? FashionRelease :
-            type === "hunt" ? ScavengerHunt :
-            PaidLimited;
+        let Model;
+
+        if (type === "fashion") Model = FashionRelease;
+        else if (type === "hunt") Model = ScavengerHunt;
+        else if (type === "paid") Model = PaidLimited;
+        else return i.reply({ content: "Invalid type", ephemeral: true });
 
         const event = await Model.findById(id);
 
-        if (!event) {
-            return i.reply({ content: "Not found.", ephemeral: true });
-        }
+        if (!event) return i.reply({ content: "Not found.", ephemeral: true });
 
         event.active = false;
         await event.save();
@@ -164,21 +226,20 @@ client.on("interactionCreate", async (i) => {
         return i.reply({ content: "Cancelled.", ephemeral: true });
     }
 
-    // EDIT
     if (i.commandName === "editcollection") {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
 
-        let Model =
-            type === "fashion" ? FashionRelease :
-            type === "hunt" ? ScavengerHunt :
-            PaidLimited;
+        let Model;
+
+        if (type === "fashion") Model = FashionRelease;
+        else if (type === "hunt") Model = ScavengerHunt;
+        else if (type === "paid") Model = PaidLimited;
+        else return i.reply({ content: "Invalid type", ephemeral: true });
 
         const event = await Model.findById(id);
 
-        if (!event) {
-            return i.reply({ content: "Not found.", ephemeral: true });
-        }
+        if (!event) return i.reply({ content: "Not found.", ephemeral: true });
 
         const title = i.options.getString("title");
         const date = i.options.getString("date");
@@ -186,7 +247,7 @@ client.on("interactionCreate", async (i) => {
         const preview = i.options.getString("preview");
 
         if (title) event.title = title;
-        if (date) event.releaseDate = new Date(date);
+        if (date) event.releaseDate = estToUTC(date);
         if (format && event.format !== undefined) event.format = format;
         if (preview !== null && event.previewUrl !== undefined) event.previewUrl = preview;
 
