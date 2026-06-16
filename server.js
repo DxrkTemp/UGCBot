@@ -16,8 +16,19 @@ app.get("/", (req, res) => {
     res.send("UGC Backend Running");
 });
 
-connectDB().then(() => {
-    app.listen(process.env.PORT || 3000, () => {
-        console.log("Server running");
-    });
-});
+(async () => {
+    try {
+        await connectDB();
+        console.log("MongoDB Connected");
+
+        const PORT = process.env.PORT || 3000;
+
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+
+    } catch (err) {
+        console.error("Startup error:", err);
+        process.exit(1);
+    }
+})();
