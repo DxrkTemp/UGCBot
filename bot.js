@@ -28,51 +28,114 @@ const GUILD_ID = process.env.GUILD_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID;
 
 function isStaff(member) {
-    return member.roles.cache.has(STAFF_ROLE_ID);
+    return member?.roles?.cache?.has(STAFF_ROLE_ID);
 }
 
 const commands = [
-
     new SlashCommandBuilder()
         .setName("verify")
         .setDescription("Link Roblox account")
         .addStringOption(o =>
-            o.setName("robloxid").setRequired(true)
+            o.setName("robloxid")
+                .setDescription("Your Roblox User ID")
+                .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("date").setRequired(true))
-        .addStringOption(o => o.setName("format").setRequired(true))
-        .addStringOption(o => o.setName("preview").setRequired(false)),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Release title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("Release date (EST)")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("format")
+                .setDescription("Release format message")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("preview")
+                .setDescription("Preview URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("ugc").setRequired(true))
-        .addStringOption(o => o.setName("rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setRequired(true))
-        .addStringOption(o => o.setName("end").setRequired(true)),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Hunt title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("ugc")
+                .setDescription("UGC item name")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("rules")
+                .setDescription("Hunt rules")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("start")
+                .setDescription("Start time")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("end")
+                .setDescription("End time")
+                .setRequired(true)
+        ),
 
     new SlashCommandBuilder()
         .setName("editcollection")
         .setDescription("Edit scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true))
-        .addStringOption(o => o.setName("id").setRequired(true))
-        .addStringOption(o => o.setName("title"))
-        .addStringOption(o => o.setName("date"))
-        .addStringOption(o => o.setName("format"))
-        .addStringOption(o => o.setName("preview")),
+        .addStringOption(o =>
+            o.setName("type")
+                .setDescription("fashion | hunt | paid")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("id")
+                .setDescription("Event ID")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("New title")
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("New date")
+        )
+        .addStringOption(o =>
+            o.setName("format")
+                .setDescription("New format")
+        )
+        .addStringOption(o =>
+            o.setName("preview")
+                .setDescription("New preview URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("cancelrelease")
         .setDescription("Cancel scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true))
-        .addStringOption(o => o.setName("id").setRequired(true))
-
+        .addStringOption(o =>
+            o.setName("type")
+                .setDescription("fashion | hunt | paid")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("id")
+                .setDescription("Event ID")
+                .setRequired(true)
+        )
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -94,32 +157,25 @@ client.on("interactionCreate", async (i) => {
     if (i.commandName === "verify") {
         const robloxId = i.options.getString("robloxid");
 
-        try {
-            const res = await axios.post(process.env.API_URL + "/api/verify", {
-                robloxId: Number(robloxId),
-                discordId: i.user.id,
-                apiKey: process.env.API_KEY
-            });
+        await i.deferReply({ ephemeral: true });
 
-            if (res.data.success) {
-                return i.reply({
-                    content: "Verified successfully!",
-                    ephemeral: true
-                });
+        try {
+            const res = await axios.post(
+                `${process.env.API_URL}/api/verify`,
+                {
+                    robloxId: Number(robloxId),
+                    discordId: i.user.id,
+                    apiKey: process.env.API_KEY
+                }
+            );
+
+            if (!res.data?.success) {
+                return i.editReply(res.data?.message || "Verification failed.");
             }
 
-            return i.reply({
-                content: res.data.message || "Verification failed.",
-                ephemeral: true
-            });
-
+            return i.editReply("Verified successfully!");
         } catch (err) {
-            console.error(err);
-
-            return i.reply({
-                content: "Server error during verification.",
-                ephemeral: true
-            });
+            return i.editReply("Server error during verification.");
         }
     }
 
@@ -183,7 +239,6 @@ client.on("interactionCreate", async (i) => {
         return i.reply({ content: "Cancelled.", ephemeral: true });
     }
 
-    // EDIT
     if (i.commandName === "editcollection") {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
