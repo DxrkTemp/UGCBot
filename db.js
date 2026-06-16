@@ -7,10 +7,12 @@ const connectDB = async () => {
 
 const UserSchema = new mongoose.Schema({
     robloxId: { type: Number, required: true, unique: true },
-    discordId: { type: String, required: true },
-    verified: { type: Boolean, default: false },
-    claimed: { type: Boolean, default: false }
+    discordId: { type: String, required: true, unique: true },
+    verified: { type: Boolean, default: true }
 });
+
+UserSchema.index({ robloxId: 1 }, { unique: true });
+UserSchema.index({ discordId: 1 }, { unique: true });
 
 const User = mongoose.model("User", UserSchema);
 
