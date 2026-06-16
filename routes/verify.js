@@ -15,15 +15,27 @@ router.post("/verify", async (req, res) => {
         return res.json({ success: false, message: "Missing data" });
     }
 
-    await User.findOneAndUpdate(
-        { robloxId },
-        {
-            robloxId,
-            discordId,
-            verified: true
-        },
-        { upsert: true }
-    );
+    const existingDiscord = await User.findOne({ discordId });
+    if (existingDiscord) {
+        return res.json({
+            success: false,
+            message: "This Discord account is already verified to a Roblox account."
+        });
+    }
+
+    const existingRoblox = await User.findOne({ robloxId });
+    if (existingRoblox) {
+        return res.json({
+            success: false,
+            message: "This Roblox account is already verified."
+        });
+    }
+
+    await User.create({
+        robloxId,
+        discordId,
+        verified: true
+    });
 
     return res.json({ success: true });
 });
