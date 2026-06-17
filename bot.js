@@ -148,10 +148,14 @@ client.once("ready", () => {
 client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
-    try {
-        await i.deferReply({ ephemeral: true });
+    let replied = false;
 
-        // ================= VERIFY (PUBLIC) =================
+    try {
+
+        await i.deferReply({ ephemeral: true });
+        replied = true;
+
+        // ================= VERIFY =================
         if (i.commandName === "verify") {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
                 robloxId: Number(i.options.getString("robloxid")),
@@ -159,14 +163,14 @@ client.on("interactionCreate", async (i) => {
                 apiKey: process.env.API_KEY
             });
 
-            return i.editReply(
+            return await i.editReply(
                 res.data.success ? "Verified successfully!" : "Verification failed."
             );
         }
 
         // ================= STAFF CHECK =================
         if (!isStaff(i.member)) {
-            return i.editReply("Staff only.");
+            return await i.editReply("Staff only.");
         }
 
         // ================= FASHION =================
@@ -183,14 +187,13 @@ client.on("interactionCreate", async (i) => {
                 active: true
             });
 
-            return i.editReply("Fashion scheduled.");
+            return await i.editReply("Fashion scheduled.");
         }
 
         // ================= HUNT =================
         if (i.commandName === "starthunt") {
             const start = estToUTC(i.options.getString("start"));
             const end = estToUTC(i.options.getString("end"));
-
             const copies = i.options.getInteger("copies");
 
             await ScavengerHunt.create({
@@ -209,7 +212,7 @@ client.on("interactionCreate", async (i) => {
                 endSent: false
             });
 
-            return i.editReply("Hunt scheduled.");
+            return await i.editReply("Hunt scheduled.");
         }
 
         // ================= AFFILIATE =================
@@ -222,7 +225,7 @@ client.on("interactionCreate", async (i) => {
                 process.env.AFFILIATE_CHANNEL_ID
             ).catch(() => null);
 
-            if (!channel) return i.editReply("Affiliate channel not found.");
+            if (!channel) return await i.editReply("Affiliate channel not found.");
 
             const embed = {
                 title: `COLLAB DROP — AVRENZI x ${affiliate}`,
@@ -245,12 +248,24 @@ client.on("interactionCreate", async (i) => {
                 embeds: [embed]
             });
 
-            return i.editReply("Affiliate posted.");
+            return await i.editReply("Affiliate posted.");
         }
 
     } catch (err) {
         console.error(err);
-        return i.editReply("Something went wrong.");
+
+        try {
+            if (i.deferred || i.replied) {
+                await i.editReply("Something went wrong.");
+            } else {
+                await i.reply({
+                    content: "Something went wrong.",
+                    ephemeral: true
+                });
+            }
+        } catch (e) {
+            console.error("Fallback reply failed:", e);
+        }
     }
 });
 
