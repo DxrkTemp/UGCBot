@@ -34,6 +34,7 @@ function isStaff(member) {
 }
 
 const commands = [
+
     new SlashCommandBuilder()
         .setName("verify")
         .setDescription("Link Roblox account")
@@ -46,48 +47,41 @@ const commands = [
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o => o.setName("title").setDescription("Title").setRequired(true))
-        .addStringOption(o => o.setName("date").setDescription("YYYY-MM-DD HH:mm").setRequired(true))
-        .addStringOption(o => o.setName("format").setDescription("Format").setRequired(true))
-        .addStringOption(o => o.setName("preview").setDescription("Preview URL")),
+        .addStringOption(o => o.setName("title").setRequired(true))
+        .addStringOption(o => o.setName("date").setRequired(true))
+        .addStringOption(o => o.setName("format").setRequired(true))
+        .addStringOption(o => o.setName("preview")),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o => o.setName("title").setDescription("Title").setRequired(true))
-        .addStringOption(o => o.setName("ugc").setDescription("UGC item").setRequired(true))
-        .addStringOption(o => o.setName("rules").setDescription("Rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setDescription("YYYY-MM-DD HH:mm").setRequired(true))
-        .addStringOption(o => o.setName("end").setDescription("YYYY-MM-DD HH:mm").setRequired(true)),
+        .addStringOption(o => o.setName("title").setRequired(true))
+        .addStringOption(o => o.setName("ugc").setRequired(true))
+        .addStringOption(o => o.setName("rules").setRequired(true))
+        .addStringOption(o => o.setName("start").setRequired(true))
+        .addStringOption(o => o.setName("end").setRequired(true)),
 
     new SlashCommandBuilder()
-        .setName("editcollection")
-        .setDescription("Edit scheduled event")
-        .addStringOption(o => o.setName("type").setDescription("Type").setRequired(true))
-        .addStringOption(o => o.setName("id").setDescription("Event ID").setRequired(true))
-        .addStringOption(o => o.setName("title").setDescription("Title"))
-        .addStringOption(o => o.setName("date").setDescription("YYYY-MM-DD HH:mm"))
-        .addStringOption(o => o.setName("format").setDescription("Format"))
-        .addStringOption(o => o.setName("preview").setDescription("Preview URL")),
+        .setName("affiliate")
+        .setDescription("Post affiliate collaboration instantly")
+        .addStringOption(o =>
+            o.setName("affiliate")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("link")
+                .setRequired(true)
+        ),
 
-    new SlashCommandBuilder()
-        .setName("cancelrelease")
-        .setDescription("Cancel scheduled event")
-        .addStringOption(o => o.setName("type").setDescription("Type").setRequired(true))
-        .addStringOption(o => o.setName("id").setDescription("Event ID").setRequired(true))
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 (async () => {
-    try {
-        await rest.put(
-            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-            { body: commands }
-        );
-    } catch (err) {
-        console.error(err);
-    }
+    await rest.put(
+        Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+        { body: commands }
+    );
 })();
 
 client.once("ready", () => {
@@ -106,11 +100,10 @@ client.on("interactionCreate", async (i) => {
                 apiKey: process.env.API_KEY
             });
 
-            if (res.data.success) {
-                return i.reply({ content: "Verified successfully!", ephemeral: true });
-            }
-
-            return i.reply({ content: res.data.message || "Verification failed.", ephemeral: true });
+            return i.reply({
+                content: res.data.success ? "Verified successfully!" : (res.data.message || "Verification failed."),
+                ephemeral: true
+            });
 
         } catch {
             return i.reply({ content: "Server error during verification.", ephemeral: true });
@@ -122,11 +115,9 @@ client.on("interactionCreate", async (i) => {
     }
 
     if (i.commandName === "preparecollection") {
-        const date = estToUTC(i.options.getString("date"));
 
-        if (!date) {
-            return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
-        }
+        const date = estToUTC(i.options.getString("date"));
+        if (!date) return i.reply({ content: "Invalid date format.", ephemeral: true });
 
         await FashionRelease.create({
             title: i.options.getString("title"),
@@ -139,11 +130,12 @@ client.on("interactionCreate", async (i) => {
     }
 
     if (i.commandName === "starthunt") {
+
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
 
         if (!start || !end) {
-            return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
+            return i.reply({ content: "Invalid date format.", ephemeral: true });
         }
 
         const hunt = await ScavengerHunt.create({
@@ -160,61 +152,35 @@ client.on("interactionCreate", async (i) => {
         });
     }
 
-    if (i.commandName === "cancelrelease") {
-        const type = i.options.getString("type");
-        const id = i.options.getString("id");
+    if (i.commandName === "affiliate") {
 
-        let Model =
-            type === "fashion" ? FashionRelease :
-            type === "hunt" ? ScavengerHunt :
-            PaidLimited;
+        const affiliate = i.options.getString("affiliate");
+        const link = i.options.getString("link");
 
-        const event = await Model.findById(id);
+        const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
 
-        if (!event) {
-            return i.reply({ content: "Not found.", ephemeral: true });
+        if (!channel) {
+            return i.reply({ content: "Affiliate channel not found.", ephemeral: true });
         }
 
-        event.active = false;
-        await event.save();
+        await channel.send(
+`:customer_av: AVRENZI x ${affiliate} — COLLAB RELEASE
 
-        return i.reply({ content: "Cancelled.", ephemeral: true });
+”Luxury in Motion, Style in Devotion”
+
+We are excited to announce our collaboration with ${affiliate}!
+
+Explore the collaboration now.
+${link}
+
+username
+The Avrenzi Team
+@unknown-role`
+        );
+
+        return i.reply({ content: "Affiliate posted.", ephemeral: true });
     }
 
-    if (i.commandName === "editcollection") {
-        const type = i.options.getString("type");
-        const id = i.options.getString("id");
-
-        let Model =
-            type === "fashion" ? FashionRelease :
-            type === "hunt" ? ScavengerHunt :
-            PaidLimited;
-
-        const event = await Model.findById(id);
-
-        if (!event) {
-            return i.reply({ content: "Not found.", ephemeral: true });
-        }
-
-        const date = i.options.getString("date");
-
-        if (i.options.getString("title")) event.title = i.options.getString("title");
-
-        if (date) {
-            const parsed = estToUTC(date);
-            if (!parsed) {
-                return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
-            }
-            event.releaseDate = parsed;
-        }
-
-        if (i.options.getString("format")) event.format = i.options.getString("format");
-        if (i.options.getString("preview") !== undefined) event.previewUrl = i.options.getString("preview");
-
-        await event.save();
-
-        return i.reply({ content: "Updated.", ephemeral: true });
-    }
 });
 
 (async () => {
