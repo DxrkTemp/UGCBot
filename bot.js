@@ -92,6 +92,7 @@ const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 client.once("ready", () => {
     console.log("Bot ready");
+    require("./scheduler")(client);
 });
 
 client.on("interactionCreate", async (i) => {
@@ -146,17 +147,18 @@ client.on("interactionCreate", async (i) => {
         }
 
         const hunt = await ScavengerHunt.create({
-            title,
-            ugcName: ugc,
-            rules,
+            title: i.options.getString("title"),
+            ugcName: i.options.getString("ugc"),
+            rules: i.options.getString("rules"),
             startDate: start,
             endDate: end
         });
-        
+
         return i.reply({
             content: `Hunt scheduled.\nID: ${hunt._id}`,
             ephemeral: true
         });
+    }
 
     if (i.commandName === "cancelrelease") {
         const type = i.options.getString("type");
@@ -197,6 +199,7 @@ client.on("interactionCreate", async (i) => {
         const date = i.options.getString("date");
 
         if (i.options.getString("title")) event.title = i.options.getString("title");
+
         if (date) {
             const parsed = estToUTC(date);
             if (!parsed) {
@@ -204,6 +207,7 @@ client.on("interactionCreate", async (i) => {
             }
             event.releaseDate = parsed;
         }
+
         if (i.options.getString("format")) event.format = i.options.getString("format");
         if (i.options.getString("preview") !== undefined) event.previewUrl = i.options.getString("preview");
 
@@ -211,7 +215,7 @@ client.on("interactionCreate", async (i) => {
 
         return i.reply({ content: "Updated.", ephemeral: true });
     }
-}});
+});
 
 (async () => {
     await connectDB();
