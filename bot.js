@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+const express = require("express");
+const app = express();
+
 const { connectDB } = require("./db");
 
 const {
@@ -19,6 +22,15 @@ const {
 } = require("./db");
 
 const { estToUTC } = require("./utils/time");
+
+app.get("/", (req, res) => {
+    res.send("Bot Online");
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds]
