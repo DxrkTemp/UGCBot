@@ -29,12 +29,6 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID;
 
-const EMOJI = {
-    premium: "<:premium:1457551517476327627>",
-    collection: "<:customer_av:1456642788568469525>",
-    gold: "<:Gold_Avrenzi:1469558139119734930>"
-};
-
 function isStaff(member) {
     return member?.roles?.cache?.has(STAFF_ROLE_ID);
 }
@@ -44,80 +38,50 @@ const commands = [
         .setName("verify")
         .setDescription("Link Roblox account")
         .addStringOption(o =>
-            o.setName("robloxid")
-                .setDescription("Roblox ID")
-                .setRequired(true)
+            o.setName("robloxid").setDescription("Roblox ID").setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
         .addStringOption(o =>
-            o.setName("title")
-                .setDescription("Title")
-                .setRequired(true)
+            o.setName("title").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("date")
-                .setDescription("YYYY-MM-DD HH:mm")
-                .setRequired(true)
+            o.setName("date").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("format")
-                .setDescription("Format")
-                .setRequired(true)
+            o.setName("format").setRequired(true)
         )
         .addStringOption(o =>
             o.setName("preview")
-                .setDescription("Preview URL")
+        )
+        .addStringOption(o =>
+            o.setName("banner")
         ),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o =>
-            o.setName("title")
-                .setDescription("Title")
-                .setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("ugc")
-                .setDescription("UGC Item")
-                .setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("rules")
-                .setDescription("Rules")
-                .setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("start")
-                .setDescription("YYYY-MM-DD HH:mm")
-                .setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("end")
-                .setDescription("YYYY-MM-DD HH:mm")
-                .setRequired(true)
-        )
-        .addIntegerOption(o =>
-            o.setName("copies")
-                .setDescription("UGC copies available")
-                .setRequired(true)
-        ),
+        .addStringOption(o => o.setName("title").setRequired(true))
+        .addStringOption(o => o.setName("ugc").setRequired(true))
+        .addStringOption(o => o.setName("rules").setRequired(true))
+        .addStringOption(o => o.setName("start").setRequired(true))
+        .addStringOption(o => o.setName("end").setRequired(true))
+        .addIntegerOption(o => o.setName("copies").setRequired(true))
+        .addStringOption(o => o.setName("banner")),
 
     new SlashCommandBuilder()
         .setName("affiliate")
-        .setDescription("Post affiliate collaboration instantly")
+        .setDescription("Post affiliate collaboration")
         .addStringOption(o =>
-            o.setName("affiliate")
-                .setDescription("Affiliate Name")
-                .setRequired(true)
+            o.setName("affiliate").setRequired(true)
         )
         .addStringOption(o =>
-            o.setName("link")
-                .setDescription("Group Store Link")
-                .setRequired(true)
+            o.setName("link").setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("banner")
         )
 ].map(c => c.toJSON());
 
@@ -139,9 +103,7 @@ client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
     try {
-        if (!i.replied && !i.deferred) {
-            await i.deferReply({ ephemeral: true });
-        }
+        await i.deferReply({ ephemeral: true });
 
         if (i.commandName === "verify") {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
@@ -159,13 +121,13 @@ client.on("interactionCreate", async (i) => {
 
         if (i.commandName === "preparecollection") {
             const date = estToUTC(i.options.getString("date"));
-            if (!date) return i.editReply("Invalid date format.");
 
             await FashionRelease.create({
                 title: i.options.getString("title"),
                 releaseDate: date,
                 format: i.options.getString("format"),
-                previewUrl: i.options.getString("preview") || ""
+                previewUrl: i.options.getString("preview") || "",
+                bannerUrl: i.options.getString("banner") || ""
             });
 
             return i.editReply("Fashion scheduled.");
@@ -174,29 +136,26 @@ client.on("interactionCreate", async (i) => {
         if (i.commandName === "starthunt") {
             const start = estToUTC(i.options.getString("start"));
             const end = estToUTC(i.options.getString("end"));
-            const copies = i.options.getInteger("copies");
 
-            if (!start || !end) {
-                return i.editReply("Invalid date format.");
-            }
-
-            const hunt = await ScavengerHunt.create({
+            await ScavengerHunt.create({
                 title: i.options.getString("title"),
                 ugcName: i.options.getString("ugc"),
                 rules: i.options.getString("rules"),
                 startDate: start,
                 endDate: end,
-                copies,
-                remainingCopies: copies,
+                copies: i.options.getInteger("copies"),
+                remainingCopies: i.options.getInteger("copies"),
+                bannerUrl: i.options.getString("banner") || "",
                 active: true
             });
 
-            return i.editReply(`Hunt scheduled.\nID: ${hunt._id}`);
+            return i.editReply("Hunt scheduled.");
         }
 
         if (i.commandName === "affiliate") {
             const affiliate = i.options.getString("affiliate");
             const link = i.options.getString("link");
+            const banner = i.options.getString("banner");
 
             const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
             if (!channel) return i.editReply("Affiliate channel not found.");
@@ -204,14 +163,14 @@ client.on("interactionCreate", async (i) => {
             await channel.send({
                 content: `<@&${process.env.AFFILIATE_ROLE_ID}>`,
                 embeds: [{
-                    title: `${EMOJI.gold} COLLAB DROP — AVRENZI x ${affiliate}`,
-                    description: "**Luxury in Motion, Style in Devotion**\n\nA new collaboration has arrived.",
+                    title: `COLLAB DROP — AVRENZI x ${affiliate}`,
+                    description: "A new collaboration has arrived.",
                     color: 0x9B59B6,
                     fields: [
-                        { name: "Partner", value: `**${affiliate}**`, inline: true },
-                        { name: "Type", value: "**Affiliate Collaboration**", inline: true },
-                        { name: "Access", value: `[Click to View](${link})` }
+                        { name: "Partner", value: affiliate, inline: true },
+                        { name: "Access", value: `[Click Here](${link})` }
                     ],
+                    image: banner ? { url: banner } : undefined,
                     footer: { text: "Avrenzi Collaboration Network" },
                     timestamp: new Date()
                 }]
