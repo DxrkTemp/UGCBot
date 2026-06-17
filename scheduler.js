@@ -32,6 +32,11 @@ module.exports = (client) => {
         return `${hours}h ${minutes}m`;
     };
 
+    const getBanner = (banner) => {
+        if (!banner || banner.trim() === "") return null;
+        return banner;
+    };
+
     const HUNT_LINK = "https://www.roblox.com/games/12568359319/Avrenzi-Homestore";
 
     cron.schedule("* * * * *", async () => {
@@ -42,6 +47,9 @@ module.exports = (client) => {
             const huntChannel = await client.channels.fetch(process.env.HUNT_CHANNEL_ID).catch(() => null);
             const paidChannel = await client.channels.fetch(process.env.PAID_LIMITED_CHANNEL_ID).catch(() => null);
 
+            if (!huntChannel) return;
+
+            // ================= FASHION =================
             const fashion = await FashionRelease.find({ active: true, announced: false });
 
             for (const f of fashion) {
@@ -67,6 +75,7 @@ module.exports = (client) => {
                 await f.save();
             }
 
+            // ================= PAID LIMITED =================
             const paid = await PaidLimited.find({ active: true, announced: false });
 
             for (const p of paid) {
@@ -92,10 +101,10 @@ module.exports = (client) => {
                 await p.save();
             }
 
+            // ================= SCAVENGER HUNT =================
             const hunts = await ScavengerHunt.find({ active: true });
 
             for (const h of hunts) {
-                if (!huntChannel) continue;
 
                 const diffStart = h.startDate - now;
                 const diffEnd = h.endDate - now;
@@ -103,14 +112,14 @@ module.exports = (client) => {
                 const d72 = 72 * 60 * 60 * 1000;
                 const d24 = 24 * 60 * 60 * 1000;
 
+                const banner = getBanner(h.bannerUrl);
+
                 // ================= UPCOMING =================
                 if (!h.sent72Hour && diffStart <= d72 && diffStart > d24) {
 
-                    await huntChannel.send({
-                        content: `<@&${process.env.EVENTS_ROLE_ID}>`,
-                        embeds: [{
-                            title: `${EMOJI.premium} UPCOMING SCAVENGER HUNT`,
-                            description:
+                    const embed = {
+                        title: `${EMOJI.premium} UPCOMING SCAVENGER HUNT`,
+                        description:
 `A new **Avrenzi Scavenger Hunt** is scheduled to take place on:
 
 Date: <t:${Math.floor(h.startDate / 1000)}:D>
@@ -118,10 +127,19 @@ Time: <t:${Math.floor(h.startDate / 1000)}:t> EST
 Location: Avrenzi Homestore
 
 The UGC reward will be revealed at the start of the event.
-Stay prepared and ensure you are a member of the Avrenzi group to participate. More details will be announced soon.`,
-                            color: COLORS.blue,
-                            timestamp: new Date()
-                        }]
+Stay prepared and ensure you are a member of the Avrenzi group to participate.
+
+More details will be announced soon.`,
+                        color: COLORS.blue,
+                        timestamp: new Date()
+                        
+                    };
+
+                    if (banner) embed.image = { url: banner };
+
+                    await huntChannel.send({
+                        content: `<@&${process.env.EVENTS_ROLE_ID}>`,
+                        embeds: [embed]
                     });
 
                     h.sent72Hour = true;
@@ -151,11 +169,9 @@ Prepare yourself and head to Avrenzi Homestore.`,
 
                     const timeRemaining = formatTimeRemaining(diffEnd);
 
-                    await huntChannel.send({
-                        content: `<@&${process.env.EVENTS_ROLE_ID}>`,
-                        embeds: [{
-                            title: `${EMOJI.premium} SCAVENGER HUNT — LIVE NOW`,
-                            description:
+                    const embed = {
+                        title: `${EMOJI.premium} SCAVENGER HUNT — LIVE NOW`,
+                        description:
 `The **Avrenzi Scavenger Hunt** is now active at the Avrenzi Homestore.
 
 Reward: **${h.ugcName}**
@@ -166,9 +182,15 @@ Exploiting or bypassing will result in a blacklist.
 
 Begin your hunt now!
 ${HUNT_LINK}`,
-                            color: COLORS.green,
-                            timestamp: new Date()
-                        }]
+                        color: COLORS.green,
+                        timestamp: new Date()
+                    };
+
+                    if (banner) embed.image = { url: banner };
+
+                    await huntChannel.send({
+                        content: `<@&${process.env.EVENTS_ROLE_ID}>`,
+                        embeds: [embed]
                     });
 
                     h.liveSent = true;
@@ -177,19 +199,23 @@ ${HUNT_LINK}`,
                 // ================= END =================
                 if (!h.endSent && h.endDate <= now) {
 
-                    await huntChannel.send({
-                        content: `<@&${process.env.EVENTS_ROLE_ID}>`,
-                        embeds: [{
-                            title: `${EMOJI.premium} SCAVENGER HUNT — EVENT ENDED`,
-                            description:
+                    const embed = {
+                        title: `${EMOJI.premium} SCAVENGER HUNT — EVENT ENDED`,
+                        description:
 `The **Avrenzi Scavenger Hunt** has officially concluded.
 
 Reward: **${h.ugcName}**
 
 Thank you for participating.`,
-                            color: COLORS.red,
-                            timestamp: new Date()
-                        }]
+                        color: COLORS.red,
+                        timestamp: new Date()
+                    };
+
+                    if (banner) embed.image = { url: banner };
+
+                    await huntChannel.send({
+                        content: `<@&${process.env.EVENTS_ROLE_ID}>`,
+                        embeds: [embed]
                     });
 
                     h.endSent = true;
