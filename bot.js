@@ -211,7 +211,6 @@ We are excited to announce our collaboration with ${affiliate}!
 Explore the collaboration now.
 ${link}
 
-username
 The Avrenzi Team
 <@&${process.env.FASHION_ROLE_ID}>`
         );
