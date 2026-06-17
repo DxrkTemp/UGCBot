@@ -180,7 +180,7 @@ Begin your hunt now and secure the reward before stock runs out!`,
                                     inline: true
                                 },
                                 {
-                                    name: "⚠ Rules",
+                                    name: "Rules",
                                     value:
                                         "Exploiting or circumventing the event will result in an immediate blacklist.\n" +
                                         "Only legitimate participants will receive the reward."
@@ -210,11 +210,6 @@ Thank you to everyone who participated.`,
                                 {
                                     name: "Reward",
                                     value: `**${h.ugcName}**`,
-                                    inline: true
-                                },
-                                {
-                                    name: "Final Copies",
-                                    value: `**${h.remainingCopies}/${h.copies}**`,
                                     inline: true
                                 },
                                 {
