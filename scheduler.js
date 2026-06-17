@@ -57,16 +57,18 @@ module.exports = (client) => {
 
             if (!huntChannel) return;
 
-            // ================= FASHION =================
-            const fashion = await FashionRelease.find({ active: true, announced: false });
-            
-            for (const f of fashion) {
-                if (!fashionChannel || f.releaseDate > now) continue;
-            
+            // ================= FASHION ================ //
+            const f = await FashionRelease.findOneAndUpdate(
+                { active: true, announced: false, releaseDate: { $lte: now } },
+                { $set: { announced: true } },
+                { new: true }
+            );
+
+            if (f && fashionChannel) {
                 const banner = getBanner(
                     f.bannerUrl || f.banner || f.image || f.banner_image
                 );
-            
+
                 await fashionChannel.send({
                     content: `<@&${process.env.FASHION_ROLE_ID}>`,
                     embeds: [{
@@ -74,10 +76,10 @@ module.exports = (client) => {
                         description:
             `The Avrenzi design team unveils this cycle’s bi-weekly release.
             Explore the newest additions to our catalog and elevate your wardrobe with refined essentials crafted for the season.
-            
+
             Shop the collection now!`,
                         color: COLORS.purple,
-            
+
                         fields: [
                             {
                                 name: "Collection",
@@ -94,16 +96,13 @@ module.exports = (client) => {
                                 value: "[Group Store Link](https://www.roblox.com/communities/8638017/Avrenzi#!/store)"
                             }
                         ],
-            
+
                         ...(banner ? { image: { url: banner } } : {}),
-            
+
                         footer: { text: "Design Team" },
                         timestamp: new Date()
                     }]
                 });
-            
-                f.announced = true;
-                await f.save();
             }
 
             // ================= PAID LIMITED =================
