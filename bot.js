@@ -211,7 +211,7 @@ client.on("interactionCreate", async (i) => {
 
         return i.reply({ content: "Updated.", ephemeral: true });
     }
-});
+}});
 
 (async () => {
     await connectDB();
