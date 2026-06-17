@@ -161,9 +161,19 @@ client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
     try {
-        await i.deferReply({ ephemeral: true });
+        const isVerify = i.commandName === "verify";
 
-        if (i.commandName === "verify") {
+        // SAFE defer (prevents Unknown interaction crash)
+        if (!i.deferred && !i.replied) {
+            try {
+                await i.deferReply({ ephemeral: true });
+            } catch (err) {
+                console.log("Defer failed:", err.message);
+                return;
+            }
+        }
+
+        if (isVerify) {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
                 robloxId: Number(i.options.getString("robloxid")),
                 discordId: i.user.id,
@@ -195,11 +205,11 @@ client.on("interactionCreate", async (i) => {
                 price: i.options.getString("price"),
                 copies: i.options.getInteger("copies"),
                 releaseDate: estToUTC(i.options.getString("date")),
-                bannerUrl: i.options.getString("banner") || "", 
+                bannerUrl: i.options.getString("banner") || "",
                 active: true,
                 announced: false
             });
-        
+
             return i.editReply("Paid Limited scheduled.");
         }
 
@@ -251,8 +261,15 @@ client.on("interactionCreate", async (i) => {
         }
 
     } catch (err) {
-        console.error(err);
-        return i.editReply("Error occurred.");
+        console.error("Interaction error:", err);
+
+        try {
+            if (i.deferred || i.replied) {
+                return i.editReply("Error occurred.");
+            }
+        } catch {}
+
+        return;
     }
 });
 
