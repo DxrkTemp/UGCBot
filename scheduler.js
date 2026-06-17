@@ -32,10 +32,18 @@ module.exports = (client) => {
         return `${hours}h ${minutes}m`;
     };
 
-    const getBanner = (banner) => {
-        if (!banner || banner.trim() === "") return null;
-        return banner;
-    };
+        const getBanner = (banner) => {
+            if (!banner) return null;
+        
+            const clean = String(banner).trim();
+        
+            if (
+                clean.length < 10 ||
+                !clean.startsWith("http")
+            ) return null;
+        
+            return clean;
+        };
 
     const HUNT_LINK = "https://www.roblox.com/games/12568359319/Avrenzi-Homestore";
 
@@ -51,26 +59,49 @@ module.exports = (client) => {
 
             // ================= FASHION =================
             const fashion = await FashionRelease.find({ active: true, announced: false });
-
+            
             for (const f of fashion) {
                 if (!fashionChannel || f.releaseDate > now) continue;
-
+            
+                const banner = getBanner(
+                    f.bannerUrl || f.banner || f.image || f.banner_image
+                );
+            
                 await fashionChannel.send({
                     content: `<@&${process.env.FASHION_ROLE_ID}>`,
                     embeds: [{
-                        title: `${EMOJI.collection} BI-WEEKLY COLLECTION DROP`,
-                        description: "**Avrenzi Homestore Update**",
+                        title: `${EMOJI.premium} BI-WEEKLY AVRENZI COLLECTION`,
+                        description:
+            `The Avrenzi design team unveils this cycle’s bi-weekly release.
+            Explore the newest additions to our catalog and elevate your wardrobe with refined essentials crafted for the season.
+            
+            Shop the collection now!`,
                         color: COLORS.purple,
+            
                         fields: [
-                            { name: "Collection", value: `**${f.title}**`, inline: true },
-                            { name: "Status", value: "**Now Available**", inline: true },
-                            { name: "Details", value: "New curated fashion pieces have been added to the store." }
+                            {
+                                name: "Collection",
+                                value: `**${f.title}**`,
+                                inline: true
+                            },
+                            {
+                                name: "Status",
+                                value: "**Now Available**",
+                                inline: true
+                            },
+                            {
+                                name: "Store",
+                                value: "[Group Store Link](https://www.roblox.com/communities/8638017/Avrenzi#!/store)"
+                            }
                         ],
-                        footer: { text: "Avrenzi Fashion Division" },
+            
+                        ...(banner ? { image: { url: banner } } : {}),
+            
+                        footer: { text: "Design Team" },
                         timestamp: new Date()
                     }]
                 });
-
+            
                 f.announced = true;
                 await f.save();
             }
