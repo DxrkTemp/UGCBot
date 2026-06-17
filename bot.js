@@ -34,7 +34,6 @@ function isStaff(member) {
 }
 
 const commands = [
-
     new SlashCommandBuilder()
         .setName("verify")
         .setDescription("Link Roblox account")
@@ -47,19 +46,54 @@ const commands = [
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("date").setRequired(true))
-        .addStringOption(o => o.setName("format").setRequired(true))
-        .addStringOption(o => o.setName("preview")),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("YYYY-MM-DD HH:mm")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("format")
+                .setDescription("Format")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("preview")
+                .setDescription("Preview URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("ugc").setRequired(true))
-        .addStringOption(o => o.setName("rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setRequired(true))
-        .addStringOption(o => o.setName("end").setRequired(true)),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("ugc")
+                .setDescription("UGC Item")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("rules")
+                .setDescription("Rules")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("start")
+                .setDescription("YYYY-MM-DD HH:mm")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("end")
+                .setDescription("YYYY-MM-DD HH:mm")
+                .setRequired(true)
+        ),
 
     new SlashCommandBuilder()
         .setName("affiliate")
@@ -73,8 +107,7 @@ const commands = [
             o.setName("link")
                 .setDescription("Group Store Link")
                 .setRequired(true)
-        ),
-
+        )
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -106,7 +139,6 @@ client.on("interactionCreate", async (i) => {
                 content: res.data.success ? "Verified successfully!" : (res.data.message || "Verification failed."),
                 ephemeral: true
             });
-
         } catch {
             return i.reply({ content: "Server error during verification.", ephemeral: true });
         }
@@ -117,7 +149,6 @@ client.on("interactionCreate", async (i) => {
     }
 
     if (i.commandName === "preparecollection") {
-
         const date = estToUTC(i.options.getString("date"));
         if (!date) return i.reply({ content: "Invalid date format.", ephemeral: true });
 
@@ -132,7 +163,6 @@ client.on("interactionCreate", async (i) => {
     }
 
     if (i.commandName === "starthunt") {
-
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
 
@@ -155,7 +185,6 @@ client.on("interactionCreate", async (i) => {
     }
 
     if (i.commandName === "affiliate") {
-
         const affiliate = i.options.getString("affiliate");
         const link = i.options.getString("link");
 
@@ -182,7 +211,6 @@ The Avrenzi Team
 
         return i.reply({ content: "Affiliate posted.", ephemeral: true });
     }
-
 });
 
 (async () => {
