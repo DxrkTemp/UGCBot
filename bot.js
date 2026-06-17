@@ -179,8 +179,10 @@ client.on("interactionCreate", async (i) => {
                 discordId: i.user.id,
                 apiKey: process.env.API_KEY
             });
-
-            return i.editReply(res.data.success ? "Verified!" : "Failed.");
+        
+            console.log("Verify Response:", res.data);
+        
+            return i.editReply(res.data.message);
         }
 
         if (!isStaff(i.member) && i.commandName !== "verify") {
