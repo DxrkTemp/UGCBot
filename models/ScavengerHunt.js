@@ -8,14 +8,15 @@ const ScavengerHuntSchema = new mongoose.Schema({
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
 
-    extendedUntil: { type: Date, default: null },
+    copies: { type: Number, required: true },
+    remainingCopies: { type: Number, required: true },
+
+    active: { type: Boolean, default: true },
 
     sent72Hour: { type: Boolean, default: false },
     sent24Hour: { type: Boolean, default: false },
     liveSent: { type: Boolean, default: false },
-    endSent: { type: Boolean, default: false },
-
-    active: { type: Boolean, default: true }
+    endSent: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model("ScavengerHunt", ScavengerHuntSchema);
