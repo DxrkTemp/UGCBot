@@ -24,9 +24,12 @@ module.exports = (client) => {
 
     const formatTimeRemaining = (ms) => {
         if (ms <= 0) return "Ended";
-        const h = Math.floor(ms / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        return `${h}h ${m}m`;
+
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        return `${hours}h ${minutes}m`;
     };
 
     const HUNT_LINK = "https://www.roblox.com/games/12568359319/Avrenzi-Homestore";
@@ -35,7 +38,59 @@ module.exports = (client) => {
         try {
             const now = new Date();
 
+            const fashionChannel = await client.channels.fetch(process.env.FASHION_CHANNEL_ID).catch(() => null);
             const huntChannel = await client.channels.fetch(process.env.HUNT_CHANNEL_ID).catch(() => null);
+            const paidChannel = await client.channels.fetch(process.env.PAID_LIMITED_CHANNEL_ID).catch(() => null);
+
+            const fashion = await FashionRelease.find({ active: true, announced: false });
+
+            for (const f of fashion) {
+                if (!fashionChannel || f.releaseDate > now) continue;
+
+                await fashionChannel.send({
+                    content: `<@&${process.env.FASHION_ROLE_ID}>`,
+                    embeds: [{
+                        title: `${EMOJI.collection} BI-WEEKLY COLLECTION DROP`,
+                        description: "**Avrenzi Homestore Update**",
+                        color: COLORS.purple,
+                        fields: [
+                            { name: "Collection", value: `**${f.title}**`, inline: true },
+                            { name: "Status", value: "**Now Available**", inline: true },
+                            { name: "Details", value: "New curated fashion pieces have been added to the store." }
+                        ],
+                        footer: { text: "Avrenzi Fashion Division" },
+                        timestamp: new Date()
+                    }]
+                });
+
+                f.announced = true;
+                await f.save();
+            }
+
+            const paid = await PaidLimited.find({ active: true, announced: false });
+
+            for (const p of paid) {
+                if (!paidChannel || p.releaseDate > now) continue;
+
+                await paidChannel.send({
+                    content: `<@&${process.env.FASHION_ROLE_ID}>`,
+                    embeds: [{
+                        title: `${EMOJI.premium} LIMITED UGC DROP`,
+                        description: "**Exclusive Homestore Release**",
+                        color: COLORS.yellow,
+                        fields: [
+                            { name: "Item", value: `**${p.itemName}**`, inline: true },
+                            { name: "Stock", value: "**Limited Copies**", inline: true },
+                            { name: "Note", value: "This item will not return once sold out." }
+                        ],
+                        footer: { text: "Avrenzi Exclusive System" },
+                        timestamp: new Date()
+                    }]
+                });
+
+                p.announced = true;
+                await p.save();
+            }
 
             const hunts = await ScavengerHunt.find({ active: true });
 
