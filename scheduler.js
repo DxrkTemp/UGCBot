@@ -80,7 +80,7 @@ module.exports = (client) => {
 
                 const template = (title, desc, color) =>
                     new EmbedBuilder()
-                        .setTitle("🎯 SCAVENGER HUNT")
+                        .setTitle(":premium: SCAVENGER HUNT")
                         .setDescription(desc)
                         .addFields(
                             { name: "Reward", value: h.ugcName || "TBA", inline: true },
