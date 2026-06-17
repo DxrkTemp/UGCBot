@@ -8,8 +8,8 @@ const ScavengerHuntSchema = new mongoose.Schema({
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
 
-    copies: { type: Number, required: true },
-    remainingCopies: { type: Number, required: true },
+    copies: { type: Number, default: 0 },
+    remainingCopies: { type: Number, default: 0 },
 
     active: { type: Boolean, default: true },
 
