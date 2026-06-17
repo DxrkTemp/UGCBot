@@ -39,17 +39,22 @@ module.exports = (client) => {
                     content: `<@&${process.env.FASHION_ROLE_ID}>`,
                     embeds: [{
                         title: `${EMOJI.collection} BI-WEEKLY COLLECTION DROP`,
-                        description:
-                            "New curated Avrenzi fashion pieces are now available in the Homestore.",
+                        description: `**Avrenzi Homestore Update**`,
                         color: COLORS.purple,
                         fields: [
                             {
-                                name: "📦 Title",
-                                value: f.title
+                                name: "Collection",
+                                value: `**${f.title}**`,
+                                inline: true
                             },
                             {
                                 name: "🛍 Status",
-                                value: "Now Available"
+                                value: "**Now Available**",
+                                inline: true
+                            },
+                            {
+                                name: "🧾 Details",
+                                value: "New curated fashion pieces have been added to the store."
                             }
                         ],
                         footer: {
@@ -71,22 +76,27 @@ module.exports = (client) => {
                 await paidChannel.send({
                     content: `<@&${process.env.FASHION_ROLE_ID}>`,
                     embeds: [{
-                        title: `${EMOJI.premium} LIMITED UGC RELEASE`,
-                        description:
-                            "A rare paid limited item is now available in the Avrenzi Homestore.",
+                        title: `${EMOJI.premium} LIMITED UGC DROP`,
+                        description: "**Exclusive Homestore Release**",
                         color: COLORS.yellow,
                         fields: [
                             {
-                                name: "🎽 Item",
-                                value: p.itemName
+                                name: "Item",
+                                value: `**${p.itemName}**`,
+                                inline: true
                             },
                             {
-                                name: "⚠ Availability",
-                                value: "Limited Stock"
+                                name: "⚠ Stock",
+                                value: "**Limited Copies**",
+                                inline: true
+                            },
+                            {
+                                name: "Note",
+                                value: "This item will not return once sold out."
                             }
                         ],
                         footer: {
-                            text: "Avrenzi Exclusive Drop"
+                            text: "Avrenzi Exclusive System"
                         },
                         timestamp: new Date()
                     }]
@@ -109,12 +119,23 @@ module.exports = (client) => {
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
                         embeds: [{
-                            title: `${EMOJI.premium} UPCOMING SCAVENGER HUNT`,
-                            description:
-                                "A new Avrenzi Hunt is scheduled at the Homestore.",
+                            title: `${EMOJI.premium} UPCOMING HUNT`,
+                            description: "**Avrenzi Scavenger Hunt Announcement**",
                             color: COLORS.blue,
+                            fields: [
+                                {
+                                    name: "Location",
+                                    value: "Avrenzi Homestore",
+                                    inline: true
+                                },
+                                {
+                                    name: "Status",
+                                    value: "**Coming Soon**",
+                                    inline: true
+                                }
+                            ],
                             footer: {
-                                text: "Avrenzi Events"
+                                text: "Event System"
                             },
                             timestamp: new Date()
                         }]
@@ -127,12 +148,17 @@ module.exports = (client) => {
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
                         embeds: [{
-                            title: `${EMOJI.premium} HUNT STARTING SOON`,
-                            description:
-                                "The Avrenzi Scavenger Hunt begins soon.",
+                            title: `${EMOJI.premium} STARTING SOON`,
+                            description: "**Scavenger Hunt begins soon**",
                             color: COLORS.yellow,
+                            fields: [
+                                {
+                                    name: "Status",
+                                    value: "**Prepare Now**"
+                                }
+                            ],
                             footer: {
-                                text: "Prepare now"
+                                text: "Avrenzi Events"
                             },
                             timestamp: new Date()
                         }]
@@ -145,18 +171,23 @@ module.exports = (client) => {
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
                         embeds: [{
-                            title: `${EMOJI.premium} SCAVENGER HUNT LIVE`,
-                            description:
-                                "The hunt is now active at Avrenzi Homestore.",
+                            title: `${EMOJI.premium} LIVE EVENT`,
+                            description: "**Scavenger Hunt is now active**",
                             color: COLORS.green,
                             fields: [
                                 {
-                                    name: "🎁 Reward",
-                                    value: h.ugcName
+                                    name: "Reward",
+                                    value: `**${h.ugcName}**`,
+                                    inline: true
                                 },
                                 {
-                                    name: "📍 Location",
-                                    value: "Avrenzi Homestore"
+                                    name: "Location",
+                                    value: "Avrenzi Homestore",
+                                    inline: true
+                                },
+                                {
+                                    name: "⚠ Reminder",
+                                    value: "No exploiting allowed"
                                 }
                             ],
                             footer: {
@@ -173,10 +204,19 @@ module.exports = (client) => {
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
                         embeds: [{
-                            title: `${EMOJI.premium} HUNT ENDED`,
-                            description:
-                                "The Avrenzi Scavenger Hunt has ended.",
+                            title: `${EMOJI.premium} EVENT ENDED`,
+                            description: "**Scavenger Hunt has finished**",
                             color: COLORS.red,
+                            fields: [
+                                {
+                                    name: "Reward",
+                                    value: h.ugcName
+                                },
+                                {
+                                    name: "🙏 Thanks",
+                                    value: "Thank you for participating!"
+                                }
+                            ],
                             footer: {
                                 text: "Event Closed"
                             },
