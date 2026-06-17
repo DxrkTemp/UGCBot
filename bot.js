@@ -18,7 +18,6 @@ const {
     PaidLimited
 } = require("./db");
 
-
 const { estToUTC } = require("./utils/time");
 
 const client = new Client({
@@ -31,60 +30,65 @@ const GUILD_ID = process.env.GUILD_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID;
 
 function isStaff(member) {
-    return member.roles.cache.has(STAFF_ROLE_ID);
+    return member?.roles?.cache?.has(STAFF_ROLE_ID);
 }
 
 const commands = [
-
     new SlashCommandBuilder()
         .setName("verify")
         .setDescription("Link Roblox account")
         .addStringOption(o =>
-            o.setName("robloxid").setRequired(true)
+            o.setName("robloxid")
+                .setDescription("Roblox ID")
+                .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("date").setRequired(true))
-        .addStringOption(o => o.setName("format").setRequired(true))
-        .addStringOption(o => o.setName("preview").setRequired(false)),
+        .addStringOption(o => o.setName("title").setDescription("Title").setRequired(true))
+        .addStringOption(o => o.setName("date").setDescription("Date").setRequired(true))
+        .addStringOption(o => o.setName("format").setDescription("Format").setRequired(true))
+        .addStringOption(o => o.setName("preview").setDescription("Preview URL").setRequired(false)),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("ugc").setRequired(true))
-        .addStringOption(o => o.setName("rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setRequired(true))
-        .addStringOption(o => o.setName("end").setRequired(true)),
+        .addStringOption(o => o.setName("title").setDescription("Title").setRequired(true))
+        .addStringOption(o => o.setName("ugc").setDescription("UGC item").setRequired(true))
+        .addStringOption(o => o.setName("rules").setDescription("Rules").setRequired(true))
+        .addStringOption(o => o.setName("start").setDescription("Start date").setRequired(true))
+        .addStringOption(o => o.setName("end").setDescription("End date").setRequired(true)),
 
     new SlashCommandBuilder()
         .setName("editcollection")
         .setDescription("Edit scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true)) 
-        .addStringOption(o => o.setName("id").setRequired(true))
-        .addStringOption(o => o.setName("title"))
-        .addStringOption(o => o.setName("date"))
-        .addStringOption(o => o.setName("format"))
-        .addStringOption(o => o.setName("preview")),
+        .addStringOption(o => o.setName("type").setDescription("Type").setRequired(true))
+        .addStringOption(o => o.setName("id").setDescription("Event ID").setRequired(true))
+        .addStringOption(o => o.setName("title").setDescription("Title"))
+        .addStringOption(o => o.setName("date").setDescription("Date"))
+        .addStringOption(o => o.setName("format").setDescription("Format"))
+        .addStringOption(o => o.setName("preview").setDescription("Preview URL")),
 
     new SlashCommandBuilder()
         .setName("cancelrelease")
         .setDescription("Cancel scheduled event")
-        .addStringOption(o => o.setName("type").setRequired(true))
-        .addStringOption(o => o.setName("id").setRequired(true))
-
+        .addStringOption(o => o.setName("type").setDescription("Type").setRequired(true))
+        .addStringOption(o => o.setName("id").setDescription("Event ID").setRequired(true))
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 (async () => {
-    await rest.put(
-        Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-        { body: commands }
-    );
+    try {
+        await rest.put(
+            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            { body: commands }
+        );
+        console.log("Slash commands registered.");
+    } catch (err) {
+        console.error(err);
+    }
 })();
 
 client.once("ready", () => {
@@ -105,10 +109,7 @@ client.on("interactionCreate", async (i) => {
             });
 
             if (res.data.success) {
-                return i.reply({
-                    content: "Verified successfully!",
-                    ephemeral: true
-                });
+                return i.reply({ content: "Verified successfully!", ephemeral: true });
             }
 
             return i.reply({
@@ -118,15 +119,11 @@ client.on("interactionCreate", async (i) => {
 
         } catch (err) {
             console.error(err);
-
-            return i.reply({
-                content: "Server error during verification.",
-                ephemeral: true
-            });
+            return i.reply({ content: "Server error during verification.", ephemeral: true });
         }
     }
 
-    if (!isStaff(i.member) && i.commandName !== "verify") {
+    if (!i.member?.roles?.cache?.has(STAFF_ROLE_ID) && i.commandName !== "verify") {
         return i.reply({ content: "Staff only.", ephemeral: true });
     }
 
@@ -136,12 +133,7 @@ client.on("interactionCreate", async (i) => {
         const format = i.options.getString("format");
         const preview = i.options.getString("preview") || "";
 
-        await FashionRelease.create({
-            title,
-            releaseDate: date,
-            format,
-            previewUrl: preview
-        });
+        await FashionRelease.create({ title, releaseDate: date, format, previewUrl: preview });
 
         return i.reply({ content: "Fashion scheduled.", ephemeral: true });
     }
@@ -186,7 +178,6 @@ client.on("interactionCreate", async (i) => {
         return i.reply({ content: "Cancelled.", ephemeral: true });
     }
 
-    // EDIT
     if (i.commandName === "editcollection") {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
@@ -210,7 +201,7 @@ client.on("interactionCreate", async (i) => {
         if (title) event.title = title;
         if (date) event.releaseDate = new Date(date);
         if (format && event.format !== undefined) event.format = format;
-        if (preview !== null && event.previewUrl !== undefined) event.previewUrl = preview;
+        if (preview !== undefined && event.previewUrl !== undefined) event.previewUrl = preview;
 
         await event.save();
 
