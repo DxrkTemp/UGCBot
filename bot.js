@@ -128,6 +128,8 @@ client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
     if (i.commandName === "verify") {
+        await i.deferReply({ ephemeral: true });
+
         try {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
                 robloxId: Number(i.options.getString("robloxid")),
@@ -135,22 +137,26 @@ client.on("interactionCreate", async (i) => {
                 apiKey: process.env.API_KEY
             });
 
-            return i.reply({
-                content: res.data.success ? "Verified successfully!" : (res.data.message || "Verification failed."),
-                ephemeral: true
-            });
+            return i.editReply(
+                res.data.success
+                    ? "Verified successfully!"
+                    : (res.data.message || "Verification failed.")
+            );
         } catch {
-            return i.reply({ content: "Server error during verification.", ephemeral: true });
+            return i.editReply("Server error during verification.");
         }
     }
 
     if (!isStaff(i.member) && i.commandName !== "verify") {
-        return i.reply({ content: "Staff only.", ephemeral: true });
+        await i.reply({ content: "Staff only.", ephemeral: true });
+        return;
     }
 
     if (i.commandName === "preparecollection") {
+        await i.deferReply({ ephemeral: true });
+
         const date = estToUTC(i.options.getString("date"));
-        if (!date) return i.reply({ content: "Invalid date format.", ephemeral: true });
+        if (!date) return i.editReply("Invalid date format.");
 
         await FashionRelease.create({
             title: i.options.getString("title"),
@@ -159,15 +165,17 @@ client.on("interactionCreate", async (i) => {
             previewUrl: i.options.getString("preview") || ""
         });
 
-        return i.reply({ content: "Fashion scheduled.", ephemeral: true });
+        return i.editReply("Fashion scheduled.");
     }
 
     if (i.commandName === "starthunt") {
+        await i.deferReply({ ephemeral: true });
+
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
 
         if (!start || !end) {
-            return i.reply({ content: "Invalid date format.", ephemeral: true });
+            return i.editReply("Invalid date format.");
         }
 
         const hunt = await ScavengerHunt.create({
@@ -178,20 +186,19 @@ client.on("interactionCreate", async (i) => {
             endDate: end
         });
 
-        return i.reply({
-            content: `Hunt scheduled.\nID: ${hunt._id}`,
-            ephemeral: true
-        });
+        return i.editReply(`Hunt scheduled.\nID: ${hunt._id}`);
     }
 
     if (i.commandName === "affiliate") {
+        await i.deferReply({ ephemeral: true });
+
         const affiliate = i.options.getString("affiliate");
         const link = i.options.getString("link");
 
         const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
 
         if (!channel) {
-            return i.reply({ content: "Affiliate channel not found.", ephemeral: true });
+            return i.editReply("Affiliate channel not found.");
         }
 
         await channel.send(
@@ -204,11 +211,12 @@ We are excited to announce our collaboration with ${affiliate}!
 Explore the collaboration now.
 ${link}
 
+username
 The Avrenzi Team
-@fashion releases`
+<@&${process.env.FASHION_ROLE_ID}>`
         );
 
-        return i.reply({ content: "Affiliate posted.", ephemeral: true });
+        return i.editReply("Affiliate posted.");
     }
 });
 
