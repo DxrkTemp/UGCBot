@@ -15,11 +15,13 @@ const UserSchema = new mongoose.Schema({
 const FashionRelease = require("./models/FashionRelease");
 const ScavengerHunt = require("./models/ScavengerHunt");
 const PaidLimited = require("./models/PaidLimited");
+const Affiliate = require("./models/Affiliate");
 
 module.exports = {
     connectDB,
     User: mongoose.model("User", UserSchema),
     FashionRelease,
     ScavengerHunt,
-    PaidLimited
+    PaidLimited,
+    Affiliate
 };
