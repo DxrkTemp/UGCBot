@@ -94,6 +94,10 @@ const commands = [
             o.setName("date")
                 .setDescription("Release date")
                 .setRequired(true)
+        )
+        .addStringOption(o =>
+        o.setName("banner")
+            .setDescription("Banner URL")
         ),
 
     new SlashCommandBuilder()
@@ -191,10 +195,11 @@ client.on("interactionCreate", async (i) => {
                 price: i.options.getString("price"),
                 copies: i.options.getInteger("copies"),
                 releaseDate: estToUTC(i.options.getString("date")),
+                bannerUrl: i.options.getString("banner") || "", 
                 active: true,
                 announced: false
             });
-
+        
             return i.editReply("Paid Limited scheduled.");
         }
 
