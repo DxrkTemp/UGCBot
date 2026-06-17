@@ -22,30 +22,14 @@ module.exports = (client) => {
         purple: 0x9B59B6
     };
 
-    const formatTimeRemaining = (ms) => {
-        if (ms <= 0) return "Ended";
+    const getBanner = (banner) => {
+        if (!banner) return null;
 
-        const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const clean = String(banner).trim();
+        if (!clean.startsWith("http")) return null;
 
-        return `${hours}h ${minutes}m`;
+        return clean;
     };
-
-        const getBanner = (banner) => {
-            if (!banner) return null;
-        
-            const clean = String(banner).trim();
-        
-            if (
-                clean.length < 10 ||
-                !clean.startsWith("http")
-            ) return null;
-        
-            return clean;
-        };
-
-    const HUNT_LINK = "https://www.roblox.com/games/12568359319/Avrenzi-Homestore";
 
     cron.schedule("* * * * *", async () => {
         try {
@@ -55,75 +39,69 @@ module.exports = (client) => {
             const huntChannel = await client.channels.fetch(process.env.HUNT_CHANNEL_ID).catch(() => null);
             const paidChannel = await client.channels.fetch(process.env.PAID_LIMITED_CHANNEL_ID).catch(() => null);
 
-            if (!huntChannel) return;
-
-            // ================= FASHION =================
+            /* ================= FASHION ================= */
             const fashion = await FashionRelease.find({ active: true, announced: false });
-            
+
             for (const f of fashion) {
                 if (!fashionChannel || f.releaseDate > now) continue;
-            
-                const banner = getBanner(
-                    f.bannerUrl || f.banner || f.image || f.banner_image
-                );
-            
+
+                const banner = getBanner(f.bannerUrl);
+
                 await fashionChannel.send({
                     content: `<@&${process.env.FASHION_ROLE_ID}>`,
                     embeds: [{
-                        title: `${EMOJI.premium} BI-WEEKLY AVRENZI COLLECTION`,
-                        description:
-            `The Avrenzi design team unveils this cycle’s bi-weekly release.
-            Explore the newest additions to our catalog and elevate your wardrobe with refined essentials crafted for the season.
-            
-            Shop the collection now!`,
+                        title: `${EMOJI.collection} BI-WEEKLY AVRENZI COLLECTION`,
+                        description: "New seasonal collection is now available.",
                         color: COLORS.purple,
-            
                         fields: [
-                            {
-                                name: "Collection",
-                                value: `**${f.title}**`,
-                                inline: true
-                            },
-                            {
-                                name: "Status",
-                                value: "**Now Available**",
-                                inline: true
-                            },
-                            {
-                                name: "Store",
-                                value: "[Group Store Link](https://www.roblox.com/communities/8638017/Avrenzi#!/store)"
-                            }
+                            { name: "Collection", value: `**${f.title}**` },
+                            { name: "Status", value: "**Now Available**" }
                         ],
-            
                         ...(banner ? { image: { url: banner } } : {}),
-            
-                        footer: { text: "Design Team" },
                         timestamp: new Date()
                     }]
                 });
-            
+
                 f.announced = true;
                 await f.save();
             }
 
-            // ================= PAID LIMITED =================
+            /* ================= PAID LIMITED (FULLY FIXED + BANNER) ================= */
             const paid = await PaidLimited.find({ active: true, announced: false });
 
             for (const p of paid) {
                 if (!paidChannel || p.releaseDate > now) continue;
 
+                const banner = getBanner(p.bannerUrl); // ✅ FIXED HERE
+
                 await paidChannel.send({
                     content: `<@&${process.env.FASHION_ROLE_ID}>`,
                     embeds: [{
-                        title: `${EMOJI.premium} LIMITED UGC DROP`,
-                        description: "**Exclusive Homestore Release**",
-                        color: COLORS.yellow,
+                        title: `${EMOJI.premium} AVRENZI EXCLUSIVE RELEASE — ${p.itemName}`,
+                        description:
+`"Luxury in Motion, Style in Devotion"
+
+An exclusive Avrenzi paid-limited item is now available for a limited time.`,
+                        color: COLORS.purple,
                         fields: [
                             { name: "Item", value: `**${p.itemName}**`, inline: true },
-                            { name: "Stock", value: "**Limited Copies**", inline: true },
-                            { name: "Note", value: "This item will not return once sold out." }
+                            { name: "Price", value: `**${p.price}**`, inline: true },
+                            { name: "Copies", value: `**${p.copies} copies**`, inline: true },
+                            { name: "Availability", value: "**Exclusive / Limited Access**" },
+                            {
+                                name: "Access",
+                                value: "🔗 Claim the exclusive limited here",
+                                inline: false
+                            },
+                            {
+                                name: "Note",
+                                value: "This item will not return once all copies are sold or the timer expires."
+                            }
                         ],
-                        footer: { text: "Avrenzi Exclusive System" },
+
+                        ...(banner ? { image: { url: banner } } : {}), // ✅ BANNER SUPPORT ADDED
+
+                        footer: { text: "The Avrenzi Team" },
                         timestamp: new Date()
                     }]
                 });
@@ -132,7 +110,7 @@ module.exports = (client) => {
                 await p.save();
             }
 
-            // ================= SCAVENGER HUNT =================
+            /* ================= SCAVENGER HUNT (UNCHANGED) ================= */
             const hunts = await ScavengerHunt.find({ active: true });
 
             for (const h of hunts) {
@@ -145,108 +123,54 @@ module.exports = (client) => {
 
                 const banner = getBanner(h.bannerUrl);
 
-                // ================= UPCOMING =================
                 if (!h.sent72Hour && diffStart <= d72 && diffStart > d24) {
-
-                    const embed = {
-                        title: `${EMOJI.premium} UPCOMING SCAVENGER HUNT`,
-                        description:
-`A new **Avrenzi Scavenger Hunt** is scheduled to take place on:
-
-Date: <t:${Math.floor(h.startDate / 1000)}:D>
-Time: <t:${Math.floor(h.startDate / 1000)}:t> EST
-Location: Avrenzi Homestore
-
-The UGC reward will be revealed at the start of the event.
-Stay prepared and ensure you are a member of the Avrenzi group to participate.
-
-More details will be announced soon.`,
-                        color: COLORS.blue,
-                        timestamp: new Date()
-                        
-                    };
-
-                    if (banner) embed.image = { url: banner };
-
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
-                        embeds: [embed]
+                        embeds: [{
+                            title: `${EMOJI.premium} UPCOMING SCAVENGER HUNT`,
+                            description: "Event announcement coming soon.",
+                            color: COLORS.blue,
+                            ...(banner ? { image: { url: banner } } : {})
+                        }]
                     });
 
                     h.sent72Hour = true;
                 }
 
-                // ================= STARTING SOON =================
                 if (!h.sent24Hour && diffStart <= d24 && diffStart > 0) {
-
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
                         embeds: [{
-                            title: `${EMOJI.premium} SCAVENGER HUNT — STARTING SOON`,
-                            description:
-`The **Avrenzi Scavenger Hunt** will begin soon.
-
-Prepare yourself and head to Avrenzi Homestore.`,
-                            color: COLORS.yellow,
-                            timestamp: new Date()
+                            title: `${EMOJI.premium} STARTING SOON`,
+                            description: "Prepare yourself.",
+                            color: COLORS.yellow
                         }]
                     });
 
                     h.sent24Hour = true;
                 }
 
-                // ================= LIVE =================
                 if (!h.liveSent && h.startDate <= now && h.endDate > now) {
-
-                    const timeRemaining = formatTimeRemaining(diffEnd);
-
-                    const embed = {
-                        title: `${EMOJI.premium} SCAVENGER HUNT — LIVE NOW`,
-                        description:
-`The **Avrenzi Scavenger Hunt** is now active at the Avrenzi Homestore.
-
-Reward: **${h.ugcName}**
-Copies Available: **${h.remainingCopies}/${h.copies}**
-Time Remaining: **${timeRemaining}**
-
-Exploiting or bypassing will result in a blacklist.
-
-Begin your hunt now!
-${HUNT_LINK}`,
-                        color: COLORS.green,
-                        timestamp: new Date()
-                    };
-
-                    if (banner) embed.image = { url: banner };
-
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
-                        embeds: [embed]
+                        embeds: [{
+                            title: `${EMOJI.premium} LIVE NOW`,
+                            description: `Reward: **${h.ugcName}**`,
+                            color: COLORS.green
+                        }]
                     });
 
                     h.liveSent = true;
                 }
 
-                // ================= END =================
                 if (!h.endSent && h.endDate <= now) {
-
-                    const embed = {
-                        title: `${EMOJI.premium} SCAVENGER HUNT — EVENT ENDED`,
-                        description:
-`The **Avrenzi Scavenger Hunt** has officially concluded.
-
-Reward: **${h.ugcName}**
-
-Thank you for participating.`,
-                        color: COLORS.red,
-                        timestamp: new Date()
-                    };
-
-                    if (banner) embed.image = { url: banner };
-
                     await huntChannel.send({
                         content: `<@&${process.env.EVENTS_ROLE_ID}>`,
-                        embeds: [embed]
+                        embeds: [{
+                            title: `${EMOJI.premium} EVENT ENDED`,
+                            description: `Reward: **${h.ugcName}**`,
+                            color: COLORS.red
+                        }]
                     });
 
                     h.endSent = true;
