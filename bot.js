@@ -72,6 +72,7 @@ const commands = [
                 .setDescription("Preview URL")
         ),
 
+    // ✅ FIXED: ADDED COPIES
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
@@ -98,6 +99,11 @@ const commands = [
         .addStringOption(o =>
             o.setName("end")
                 .setDescription("YYYY-MM-DD HH:mm")
+                .setRequired(true)
+        )
+        .addIntegerOption(o =>
+            o.setName("copies")
+                .setDescription("UGC copies available")
                 .setRequired(true)
         ),
 
@@ -178,6 +184,7 @@ client.on("interactionCreate", async (i) => {
 
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
+        const copies = i.options.getInteger("copies");
 
         if (!start || !end) {
             return i.editReply("Invalid date format.");
@@ -188,7 +195,10 @@ client.on("interactionCreate", async (i) => {
             ugcName: i.options.getString("ugc"),
             rules: i.options.getString("rules"),
             startDate: start,
-            endDate: end
+            endDate: end,
+            copies,
+            remainingCopies: copies,
+            active: true
         });
 
         return i.editReply(`Hunt scheduled.\nID: ${hunt._id}`);
@@ -196,45 +206,30 @@ client.on("interactionCreate", async (i) => {
 
     if (i.commandName === "affiliate") {
         await i.deferReply({ ephemeral: true });
-    
+
         const affiliate = i.options.getString("affiliate");
         const link = i.options.getString("link");
-    
+
         const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
-    
+
         if (!channel) return i.editReply("Affiliate channel not found.");
-    
+
         await channel.send({
             content: `<@&${process.env.AFFILIATE_ROLE_ID}>`,
             embeds: [{
                 title: `${EMOJI.gold} COLLAB DROP — AVRENZI x ${affiliate}`,
-                description:
-                    "**Luxury in Motion, Style in Devotion**\n\n" +
-                    "A new collaboration has arrived at the Avrenzi Homestore.",
+                description: "**Luxury in Motion, Style in Devotion**\n\nA new collaboration has arrived.",
                 color: 0x9B59B6,
                 fields: [
-                    {
-                        name: "Partner",
-                        value: `**${affiliate}**`,
-                        inline: true
-                    },
-                    {
-                        name: "Type",
-                        value: "**Affiliate Collaboration**",
-                        inline: true
-                    },
-                    {
-                        name: "Access",
-                        value: `[Click to View](${link})`
-                    }
+                    { name: "Partner", value: `**${affiliate}**`, inline: true },
+                    { name: "Type", value: "**Affiliate Collaboration**", inline: true },
+                    { name: "Access", value: `[Click to View](${link})` }
                 ],
-                footer: {
-                    text: "Avrenzi Collaboration Network"
-                },
+                footer: { text: "Avrenzi Collaboration Network" },
                 timestamp: new Date()
             }]
         });
-    
+
         return i.editReply("Affiliate posted.");
     }
 });
