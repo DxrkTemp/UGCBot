@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+const { connectDB } = require("./db");
+
 const {
     Client,
     GatewayIntentBits,
@@ -16,96 +18,64 @@ const {
     PaidLimited
 } = require("./db");
 
+
 const { estToUTC } = require("./utils/time");
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+    intents: [GatewayIntentBits.Guilds]
 });
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
+const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID;
 
 function isStaff(member) {
-    return member?.roles?.cache?.has(process.env.STAFF_ROLE_ID);
+    return member.roles.cache.has(STAFF_ROLE_ID);
 }
 
 const commands = [
+
     new SlashCommandBuilder()
         .setName("verify")
         .setDescription("Link Roblox account")
         .addStringOption(o =>
-            o.setName("robloxid")
-                .setDescription("Roblox ID")
-                .setRequired(true)
+            o.setName("robloxid").setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o =>
-            o.setName("title").setDescription("Title").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("date").setDescription("Date").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("format").setDescription("Format").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("preview").setDescription("Preview URL")
-        ),
+        .addStringOption(o => o.setName("title").setRequired(true))
+        .addStringOption(o => o.setName("date").setRequired(true))
+        .addStringOption(o => o.setName("format").setRequired(true))
+        .addStringOption(o => o.setName("preview").setRequired(false)),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o =>
-            o.setName("title").setDescription("Title").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("ugc").setDescription("UGC").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("rules").setDescription("Rules").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("start").setDescription("Start date").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("end").setDescription("End date").setRequired(true)
-        ),
+        .addStringOption(o => o.setName("title").setRequired(true))
+        .addStringOption(o => o.setName("ugc").setRequired(true))
+        .addStringOption(o => o.setName("rules").setRequired(true))
+        .addStringOption(o => o.setName("start").setRequired(true))
+        .addStringOption(o => o.setName("end").setRequired(true)),
 
     new SlashCommandBuilder()
         .setName("editcollection")
         .setDescription("Edit scheduled event")
-        .addStringOption(o =>
-            o.setName("type").setDescription("type").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("id").setDescription("id").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("title").setDescription("title")
-        )
-        .addStringOption(o =>
-            o.setName("date").setDescription("date")
-        )
-        .addStringOption(o =>
-            o.setName("format").setDescription("format")
-        )
-        .addStringOption(o =>
-            o.setName("preview").setDescription("preview")
-        ),
+        .addStringOption(o => o.setName("type").setRequired(true)) 
+        .addStringOption(o => o.setName("id").setRequired(true))
+        .addStringOption(o => o.setName("title"))
+        .addStringOption(o => o.setName("date"))
+        .addStringOption(o => o.setName("format"))
+        .addStringOption(o => o.setName("preview")),
 
     new SlashCommandBuilder()
         .setName("cancelrelease")
         .setDescription("Cancel scheduled event")
-        .addStringOption(o =>
-            o.setName("type").setDescription("type").setRequired(true)
-        )
-        .addStringOption(o =>
-            o.setName("id").setDescription("id").setRequired(true)
-        )
+        .addStringOption(o => o.setName("type").setRequired(true))
+        .addStringOption(o => o.setName("id").setRequired(true))
+
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -134,14 +104,21 @@ client.on("interactionCreate", async (i) => {
                 apiKey: process.env.API_KEY
             });
 
+            if (res.data.success) {
+                return i.reply({
+                    content: "Verified successfully!",
+                    ephemeral: true
+                });
+            }
+
             return i.reply({
-                content: res.data.success
-                    ? "Verified successfully!"
-                    : (res.data.message || "Verification failed."),
+                content: res.data.message || "Verification failed.",
                 ephemeral: true
             });
 
-        } catch {
+        } catch (err) {
+            console.error(err);
+
             return i.reply({
                 content: "Server error during verification.",
                 ephemeral: true
@@ -149,9 +126,7 @@ client.on("interactionCreate", async (i) => {
         }
     }
 
-    const member = await i.guild.members.fetch(i.user.id);
-
-    if (i.commandName !== "verify" && !isStaff(member)) {
+    if (!isStaff(i.member) && i.commandName !== "verify") {
         return i.reply({ content: "Staff only.", ephemeral: true });
     }
 
@@ -161,7 +136,12 @@ client.on("interactionCreate", async (i) => {
         const format = i.options.getString("format");
         const preview = i.options.getString("preview") || "";
 
-        await FashionRelease.create({ title, releaseDate: date, format, previewUrl: preview });
+        await FashionRelease.create({
+            title,
+            releaseDate: date,
+            format,
+            previewUrl: preview
+        });
 
         return i.reply({ content: "Fashion scheduled.", ephemeral: true });
     }
@@ -174,7 +154,13 @@ client.on("interactionCreate", async (i) => {
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
 
-        await ScavengerHunt.create({ title, ugcName: ugc, rules, startDate: start, endDate: end });
+        await ScavengerHunt.create({
+            title,
+            ugcName: ugc,
+            rules,
+            startDate: start,
+            endDate: end
+        });
 
         return i.reply({ content: "Hunt scheduled.", ephemeral: true });
     }
@@ -183,7 +169,7 @@ client.on("interactionCreate", async (i) => {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
 
-        const Model =
+        let Model =
             type === "fashion" ? FashionRelease :
             type === "hunt" ? ScavengerHunt :
             PaidLimited;
@@ -200,11 +186,12 @@ client.on("interactionCreate", async (i) => {
         return i.reply({ content: "Cancelled.", ephemeral: true });
     }
 
+    // EDIT
     if (i.commandName === "editcollection") {
         const type = i.options.getString("type");
         const id = i.options.getString("id");
 
-        const Model =
+        let Model =
             type === "fashion" ? FashionRelease :
             type === "hunt" ? ScavengerHunt :
             PaidLimited;
@@ -231,4 +218,7 @@ client.on("interactionCreate", async (i) => {
     }
 });
 
-client.login(TOKEN);
+(async () => {
+    await connectDB();
+    client.login(TOKEN);
+})();
