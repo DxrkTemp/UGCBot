@@ -208,9 +208,7 @@ Time: <t:${Math.floor(h.startDate / 1000)}:t> EST
 Location: Avrenzi Homestore
 
 The UGC reward will be revealed at the start of the event.
-Stay prepared and ensure you are a member of the Avrenzi group to participate.
-
-More details will be announced soon.`,
+Stay prepared and ensure you are a member of the Avrenzi group to participate more details will be announced soon.`,
                                 color: COLORS.blue,
                                 timestamp: new Date(),
                                 ...(banner ? { image: { url: banner } } : {})
@@ -254,7 +252,13 @@ Reward: **${h.ugcName}**
 Copies Available: **${h.remainingCopies}/${h.copies}**
 Time Remaining: **${timeRemaining}**
 
-Exploiting or bypassing will result in a blacklist.
+Rules:
+Exploiting or circumventing the event will result in an immediate blacklist from the Homestore. Only legitimate participants will receive the reward.
+
+This event may close early if:
+• All copies are claimed
+• The reward reaches low remaining stock
+• Exploiters are detected attempting to bypass the event
 
 Begin your hunt now!
 ${HUNT_LINK}`,
@@ -283,7 +287,8 @@ ${HUNT_LINK}`,
 
 Reward: **${h.ugcName}**
 
-Thank you for participating.`,
+Thank you to everyone who participated.
+Further information regarding leftover copies will be announced soon.`,
                                 color: COLORS.red,
                                 timestamp: new Date(),
                                 ...(banner ? { image: { url: banner } } : {})
