@@ -66,10 +66,12 @@ const commands = [
         .setDescription("Post affiliate collaboration instantly")
         .addStringOption(o =>
             o.setName("affiliate")
+                .setDescription("Affiliate Name")
                 .setRequired(true)
         )
         .addStringOption(o =>
             o.setName("link")
+                .setDescription("Group Store Link")
                 .setRequired(true)
         ),
 
