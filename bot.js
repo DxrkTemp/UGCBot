@@ -202,7 +202,7 @@ client.on("interactionCreate", async (i) => {
         }
     
         await channel.send(
-    `<@&${process.env.FASHION_ROLE_ID}>
+    `<@&${process.env.AFFILIATE_ROLE_ID}>
     
     :customer_av: AVRENZI x ${affiliate} — COLLAB RELEASE
     "Luxury in Motion, Style in Devotion"
