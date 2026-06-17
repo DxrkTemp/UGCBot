@@ -14,6 +14,9 @@ module.exports = (client) => {
         affiliate: "<:Gold_Avrenzi:1469558139119734930>"
     };
 
+    const EVENTS_ROLE = `<@&${process.env.EVENTS_ROLE_ID}>`;
+    const FASHION_ROLE = `<@&${process.env.FASHION_ROLE_ID}>`;
+
     cron.schedule("* * * * *", async () => {
         try {
             const now = new Date();
@@ -29,7 +32,7 @@ module.exports = (client) => {
                 if (f.releaseDate > now) continue;
 
                 await fashionChannel.send({
-                    content: "@everyone",
+                    content: FASHION_ROLE,
                     embeds: [
                         {
                             title: `${EMOJI.collection} BI-WEEKLY AVRENZI COLLECTION`,
@@ -55,7 +58,7 @@ module.exports = (client) => {
                 if (p.releaseDate > now) continue;
 
                 await paidChannel.send({
-                    content: "@everyone",
+                    content: FASHION_ROLE,
                     embeds: [
                         {
                             title: `${EMOJI.collection} AVRENZI EXCLUSIVE RELEASE`,
@@ -86,7 +89,7 @@ module.exports = (client) => {
 
                 if (!h.sent72Hour && diff <= d72 && diff > d24) {
                     await huntChannel.send({
-                        content: "<@&events>",
+                        content: EVENTS_ROLE,
                         embeds: [
                             {
                                 title: `${EMOJI.hunt} UPCOMING SCAVENGER HUNT`,
@@ -105,7 +108,7 @@ module.exports = (client) => {
 
                 if (!h.sent24Hour && diff <= d24 && diff > 0) {
                     await huntChannel.send({
-                        content: "<@&events>",
+                        content: EVENTS_ROLE,
                         embeds: [
                             {
                                 title: `${EMOJI.hunt} SCAVENGER HUNT — SOON`,
@@ -123,7 +126,7 @@ module.exports = (client) => {
 
                 if (!h.liveSent && h.startDate <= now && h.endDate > now) {
                     await huntChannel.send({
-                        content: "<@&events>",
+                        content: EVENTS_ROLE,
                         embeds: [
                             {
                                 title: `${EMOJI.hunt} SCAVENGER HUNT — LIVE NOW`,
@@ -144,7 +147,7 @@ module.exports = (client) => {
 
                 if (!h.endSent && h.endDate <= now) {
                     await huntChannel.send({
-                        content: "<@&events>",
+                        content: EVENTS_ROLE,
                         embeds: [
                             {
                                 title: `${EMOJI.hunt} SCAVENGER HUNT — EVENT ENDED`,
