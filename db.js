@@ -1,8 +1,13 @@
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB Connected");
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log("MongoDB Connected");
+    } catch (err) {
+        console.error("MongoDB Connection Failed:", err);
+        process.exit(1);
+    }
 };
 
 const UserSchema = new mongoose.Schema({
@@ -10,7 +15,7 @@ const UserSchema = new mongoose.Schema({
     discordId: { type: String, required: true },
     verified: { type: Boolean, default: false },
     claimed: { type: Boolean, default: false }
-});
+}, { timestamps: true });
 
 const FashionRelease = require("./models/FashionRelease");
 const ScavengerHunt = require("./models/ScavengerHunt");
