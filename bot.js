@@ -196,36 +196,45 @@ client.on("interactionCreate", async (i) => {
 
     if (i.commandName === "affiliate") {
         await i.deferReply({ ephemeral: true });
-
+    
         const affiliate = i.options.getString("affiliate");
         const link = i.options.getString("link");
-
+    
         const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
-
+    
         if (!channel) return i.editReply("Affiliate channel not found.");
-
+    
         await channel.send({
             content: `<@&${process.env.AFFILIATE_ROLE_ID}>`,
             embeds: [{
-                title: `${EMOJI.gold} AVRENZI x ${affiliate} — COLLAB RELEASE`,
+                title: `${EMOJI.gold} COLLAB DROP — AVRENZI x ${affiliate}`,
                 description:
-                    `"Luxury in Motion, Style in Devotion"\n\n` +
-                    `We are excited to announce our collaboration with **${affiliate}**!\n\n` +
-                    `Click below to explore the collection.`,
+                    "**Luxury in Motion, Style in Devotion**\n\n" +
+                    "A new collaboration has arrived at the Avrenzi Homestore.",
                 color: 0x9B59B6,
                 fields: [
                     {
-                        name: "🔗 Link",
-                        value: link
+                        name: "Partner",
+                        value: `**${affiliate}**`,
+                        inline: true
+                    },
+                    {
+                        name: "Type",
+                        value: "**Affiliate Collaboration**",
+                        inline: true
+                    },
+                    {
+                        name: "Access",
+                        value: `[Click to View](${link})`
                     }
                 ],
                 footer: {
-                    text: "Avrenzi Collaboration System"
+                    text: "Avrenzi Collaboration Network"
                 },
                 timestamp: new Date()
             }]
         });
-
+    
         return i.editReply("Affiliate posted.");
     }
 });
