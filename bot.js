@@ -72,7 +72,6 @@ const commands = [
                 .setDescription("Preview URL")
         ),
 
-    // ✅ FIXED: ADDED COPIES
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
@@ -139,98 +138,91 @@ client.once("ready", () => {
 client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
-    if (i.commandName === "verify") {
-        await i.deferReply({ ephemeral: true });
+    try {
+        if (!i.replied && !i.deferred) {
+            await i.deferReply({ ephemeral: true });
+        }
 
-        try {
+        if (i.commandName === "verify") {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
                 robloxId: Number(i.options.getString("robloxid")),
                 discordId: i.user.id,
                 apiKey: process.env.API_KEY
             });
 
-            return i.editReply(
-                res.data.success
-                    ? "Verified successfully!"
-                    : (res.data.message || "Verification failed.")
-            );
-        } catch {
-            return i.editReply("Server error during verification.");
-        }
-    }
-
-    if (!isStaff(i.member) && i.commandName !== "verify") {
-        return i.reply({ content: "Staff only.", ephemeral: true });
-    }
-
-    if (i.commandName === "preparecollection") {
-        await i.deferReply({ ephemeral: true });
-
-        const date = estToUTC(i.options.getString("date"));
-        if (!date) return i.editReply("Invalid date format.");
-
-        await FashionRelease.create({
-            title: i.options.getString("title"),
-            releaseDate: date,
-            format: i.options.getString("format"),
-            previewUrl: i.options.getString("preview") || ""
-        });
-
-        return i.editReply("Fashion scheduled.");
-    }
-
-    if (i.commandName === "starthunt") {
-        await i.deferReply({ ephemeral: true });
-
-        const start = estToUTC(i.options.getString("start"));
-        const end = estToUTC(i.options.getString("end"));
-        const copies = i.options.getInteger("copies");
-
-        if (!start || !end) {
-            return i.editReply("Invalid date format.");
+            return i.editReply(res.data.success ? "Verified successfully!" : "Verification failed.");
         }
 
-        const hunt = await ScavengerHunt.create({
-            title: i.options.getString("title"),
-            ugcName: i.options.getString("ugc"),
-            rules: i.options.getString("rules"),
-            startDate: start,
-            endDate: end,
-            copies,
-            remainingCopies: copies,
-            active: true
-        });
+        if (!isStaff(i.member) && i.commandName !== "verify") {
+            return i.editReply("Staff only.");
+        }
 
-        return i.editReply(`Hunt scheduled.\nID: ${hunt._id}`);
-    }
+        if (i.commandName === "preparecollection") {
+            const date = estToUTC(i.options.getString("date"));
+            if (!date) return i.editReply("Invalid date format.");
 
-    if (i.commandName === "affiliate") {
-        await i.deferReply({ ephemeral: true });
+            await FashionRelease.create({
+                title: i.options.getString("title"),
+                releaseDate: date,
+                format: i.options.getString("format"),
+                previewUrl: i.options.getString("preview") || ""
+            });
 
-        const affiliate = i.options.getString("affiliate");
-        const link = i.options.getString("link");
+            return i.editReply("Fashion scheduled.");
+        }
 
-        const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
+        if (i.commandName === "starthunt") {
+            const start = estToUTC(i.options.getString("start"));
+            const end = estToUTC(i.options.getString("end"));
+            const copies = i.options.getInteger("copies");
 
-        if (!channel) return i.editReply("Affiliate channel not found.");
+            if (!start || !end) {
+                return i.editReply("Invalid date format.");
+            }
 
-        await channel.send({
-            content: `<@&${process.env.AFFILIATE_ROLE_ID}>`,
-            embeds: [{
-                title: `${EMOJI.gold} COLLAB DROP — AVRENZI x ${affiliate}`,
-                description: "**Luxury in Motion, Style in Devotion**\n\nA new collaboration has arrived.",
-                color: 0x9B59B6,
-                fields: [
-                    { name: "Partner", value: `**${affiliate}**`, inline: true },
-                    { name: "Type", value: "**Affiliate Collaboration**", inline: true },
-                    { name: "Access", value: `[Click to View](${link})` }
-                ],
-                footer: { text: "Avrenzi Collaboration Network" },
-                timestamp: new Date()
-            }]
-        });
+            const hunt = await ScavengerHunt.create({
+                title: i.options.getString("title"),
+                ugcName: i.options.getString("ugc"),
+                rules: i.options.getString("rules"),
+                startDate: start,
+                endDate: end,
+                copies,
+                remainingCopies: copies,
+                active: true
+            });
 
-        return i.editReply("Affiliate posted.");
+            return i.editReply(`Hunt scheduled.\nID: ${hunt._id}`);
+        }
+
+        if (i.commandName === "affiliate") {
+            const affiliate = i.options.getString("affiliate");
+            const link = i.options.getString("link");
+
+            const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
+            if (!channel) return i.editReply("Affiliate channel not found.");
+
+            await channel.send({
+                content: `<@&${process.env.AFFILIATE_ROLE_ID}>`,
+                embeds: [{
+                    title: `${EMOJI.gold} COLLAB DROP — AVRENZI x ${affiliate}`,
+                    description: "**Luxury in Motion, Style in Devotion**\n\nA new collaboration has arrived.",
+                    color: 0x9B59B6,
+                    fields: [
+                        { name: "Partner", value: `**${affiliate}**`, inline: true },
+                        { name: "Type", value: "**Affiliate Collaboration**", inline: true },
+                        { name: "Access", value: `[Click to View](${link})` }
+                    ],
+                    footer: { text: "Avrenzi Collaboration Network" },
+                    timestamp: new Date()
+                }]
+            });
+
+            return i.editReply("Affiliate posted.");
+        }
+
+    } catch (err) {
+        console.error(err);
+        return i.editReply("Something went wrong.");
     }
 });
 
