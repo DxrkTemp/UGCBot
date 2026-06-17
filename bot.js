@@ -40,41 +40,107 @@ const commands = [
         .setName("verify")
         .setDescription("Link Roblox account")
         .addStringOption(o =>
-            o.setName("robloxid").setDescription("Roblox ID").setRequired(true)
+            o.setName("robloxid")
+                .setDescription("Your Roblox ID")
+                .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("date").setRequired(true))
-        .addStringOption(o => o.setName("format").setRequired(true))
-        .addStringOption(o => o.setName("preview"))
-        .addStringOption(o => o.setName("banner")),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Collection title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("Release date (EST format)")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("format")
+                .setDescription("Release format")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("preview")
+                .setDescription("Preview image URL")
+        )
+        .addStringOption(o =>
+            o.setName("banner")
+                .setDescription("Banner image URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("paidlimited")
         .setDescription("Schedule paid limited drop")
-        .addStringOption(o => o.setName("item").setRequired(true))
-        .addStringOption(o => o.setName("date").setRequired(true)),
+        .addStringOption(o =>
+            o.setName("item")
+                .setDescription("Item name")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("date")
+                .setDescription("Release date (EST format)")
+                .setRequired(true)
+        ),
 
     new SlashCommandBuilder()
         .setName("starthunt")
         .setDescription("Create scavenger hunt")
-        .addStringOption(o => o.setName("title").setRequired(true))
-        .addStringOption(o => o.setName("ugc").setRequired(true))
-        .addStringOption(o => o.setName("rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setRequired(true))
-        .addStringOption(o => o.setName("end").setRequired(true))
-        .addIntegerOption(o => o.setName("copies").setRequired(true))
-        .addStringOption(o => o.setName("banner")),
+        .addStringOption(o =>
+            o.setName("title")
+                .setDescription("Hunt title")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("ugc")
+                .setDescription("UGC reward name")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("rules")
+                .setDescription("Hunt rules")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("start")
+                .setDescription("Start date (EST)")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("end")
+                .setDescription("End date (EST)")
+                .setRequired(true)
+        )
+        .addIntegerOption(o =>
+            o.setName("copies")
+                .setDescription("Number of copies")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("banner")
+                .setDescription("Banner image URL")
+        ),
 
     new SlashCommandBuilder()
         .setName("affiliate")
         .setDescription("Post affiliate collaboration")
-        .addStringOption(o => o.setName("affiliate").setRequired(true))
-        .addStringOption(o => o.setName("link").setRequired(true))
-        .addStringOption(o => o.setName("banner"))
+        .addStringOption(o =>
+            o.setName("affiliate")
+                .setDescription("Affiliate partner name")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("link")
+                .setDescription("Affiliate link")
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName("banner")
+                .setDescription("Banner image URL")
+        )
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
@@ -101,7 +167,6 @@ client.on("interactionCreate", async (i) => {
     try {
         await i.deferReply({ ephemeral: true });
 
-        /* ================= VERIFY ================= */
         if (i.commandName === "verify") {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
                 robloxId: Number(i.options.getString("robloxid")),
@@ -109,14 +174,15 @@ client.on("interactionCreate", async (i) => {
                 apiKey: process.env.API_KEY
             });
 
-            return i.editReply(res.data.success ? "Verified successfully!" : "Verification failed.");
+            return i.editReply(
+                res.data.success ? "Verified successfully!" : "Verification failed."
+            );
         }
 
         if (!isStaff(i.member) && i.commandName !== "verify") {
             return i.editReply("Staff only.");
         }
 
-        /* ================= FASHION ================= */
         if (i.commandName === "preparecollection") {
             const date = estToUTC(i.options.getString("date"));
 
@@ -131,7 +197,6 @@ client.on("interactionCreate", async (i) => {
             return i.editReply("Fashion scheduled.");
         }
 
-        /* ================= PAID LIMITED (FIXED) ================= */
         if (i.commandName === "paidlimited") {
             const date = estToUTC(i.options.getString("date"));
 
@@ -145,7 +210,6 @@ client.on("interactionCreate", async (i) => {
             return i.editReply("Paid Limited scheduled.");
         }
 
-        /* ================= HUNT ================= */
         if (i.commandName === "starthunt") {
             const start = estToUTC(i.options.getString("start"));
             const end = estToUTC(i.options.getString("end"));
@@ -165,7 +229,6 @@ client.on("interactionCreate", async (i) => {
             return i.editReply("Hunt scheduled.");
         }
 
-        /* ================= AFFILIATE ================= */
         if (i.commandName === "affiliate") {
             const affiliate = i.options.getString("affiliate");
             const link = i.options.getString("link");
