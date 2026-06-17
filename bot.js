@@ -184,17 +184,17 @@ client.on("interactionCreate", async (i) => {
         });
     }
 
-if (i.commandName === "affiliate") {
-    const affiliate = i.options.getString("affiliate");
-    const link = i.options.getString("link");
+    if (i.commandName === "affiliate") {
+        const affiliate = i.options.getString("affiliate");
+        const link = i.options.getString("link");
 
-    const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
+        const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
 
-    if (!channel) {
-        return i.reply({ content: "Affiliate channel not found.", ephemeral: true });
-    }
+        if (!channel) {
+            return i.reply({ content: "Affiliate channel not found.", ephemeral: true });
+        }
 
-    await channel.send(
+        await channel.send(
 `:customer_av: AVRENZI x ${affiliate} — COLLAB RELEASE
 
 ”Luxury in Motion, Style in Devotion”
@@ -207,10 +207,11 @@ ${link}
 username
 The Avrenzi Team
 @fashion releases`
-    );
+        );
 
-    return i.reply({ content: "Affiliate posted.", ephemeral: true });
-}
+        return i.reply({ content: "Affiliate posted.", ephemeral: true });
+    }
+});
 
 (async () => {
     await connectDB();
