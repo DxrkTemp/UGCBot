@@ -94,7 +94,7 @@ module.exports = (client) => {
                                     "A new Avrenzi Scavenger Hunt is scheduled.\n\n" +
                                     "Stay prepared and ensure you are a member of the Avrenzi group to participate.",
                                 color: 0x3498DB,
-                                footer: { text: "Public Relations Department" },
+                                footer: { text: "Avrenzi" },
                                 timestamp: new Date()
                             }
                         ]
@@ -112,7 +112,7 @@ module.exports = (client) => {
                                 description:
                                     "The Avrenzi Scavenger Hunt begins soon at the Avrenzi Homestore.\n\nBe ready.",
                                 color: 0xF1C40F,
-                                footer: { text: "Public Relations Department" },
+                                footer: { text: "Avrenzi" },
                                 timestamp: new Date()
                             }
                         ]
@@ -133,7 +133,7 @@ module.exports = (client) => {
                                     `**Location:** Avrenzi Homestore\n\nBegin your hunt now!\n` +
                                     "https://www.roblox.com/games/12568359319/Avrenzi-Homestore",
                                 color: 0x2ECC71,
-                                footer: { text: "Public Relations Department" },
+                                footer: { text: "Avrenzi" },
                                 timestamp: new Date()
                             }
                         ]
@@ -152,7 +152,7 @@ module.exports = (client) => {
                                     "The Avrenzi Scavenger Hunt has officially concluded.\n\n" +
                                     `**Reward:** ${h.ugcName}\n\nThank you for participating.`,
                                 color: 0xE74C3C,
-                                footer: { text: "Public Relations Department" },
+                                footer: { text: "Avrenzi" },
                                 timestamp: new Date()
                             }
                         ]
