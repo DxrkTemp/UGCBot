@@ -145,16 +145,18 @@ client.on("interactionCreate", async (i) => {
             return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
         }
 
-        await ScavengerHunt.create({
-            title: i.options.getString("title"),
-            ugcName: i.options.getString("ugc"),
-            rules: i.options.getString("rules"),
+        const hunt = await ScavengerHunt.create({
+            title,
+            ugcName: ugc,
+            rules,
             startDate: start,
             endDate: end
         });
-
-        return i.reply({ content: "Hunt scheduled.", ephemeral: true });
-    }
+        
+        return i.reply({
+            content: `Hunt scheduled.\nID: ${hunt._id}`,
+            ephemeral: true
+        });
 
     if (i.commandName === "cancelrelease") {
         const type = i.options.getString("type");
