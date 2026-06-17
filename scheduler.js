@@ -93,7 +93,6 @@ username
 Public Relations Department
 @unknown-role`
                     );
-
                     h.sent72Hour = true;
                 }
 
@@ -109,7 +108,6 @@ username
 Public Relations Department
 @unknown-role`
                     );
-
                     h.sent24Hour = true;
                 }
 
@@ -129,7 +127,6 @@ username
 Public Relations Department
 @unknown-role`
                     );
-
                     h.liveSent = true;
                 }
 
@@ -147,7 +144,6 @@ username
 Public Relations Department
 @unknown-role`
                     );
-
                     h.endSent = true;
                 }
 
