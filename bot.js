@@ -47,9 +47,9 @@ const commands = [
         .setName("preparecollection")
         .setDescription("Schedule fashion release")
         .addStringOption(o => o.setName("title").setDescription("Title").setRequired(true))
-        .addStringOption(o => o.setName("date").setDescription("Date").setRequired(true))
+        .addStringOption(o => o.setName("date").setDescription("YYYY-MM-DD HH:mm").setRequired(true))
         .addStringOption(o => o.setName("format").setDescription("Format").setRequired(true))
-        .addStringOption(o => o.setName("preview").setDescription("Preview URL").setRequired(false)),
+        .addStringOption(o => o.setName("preview").setDescription("Preview URL")),
 
     new SlashCommandBuilder()
         .setName("starthunt")
@@ -57,8 +57,8 @@ const commands = [
         .addStringOption(o => o.setName("title").setDescription("Title").setRequired(true))
         .addStringOption(o => o.setName("ugc").setDescription("UGC item").setRequired(true))
         .addStringOption(o => o.setName("rules").setDescription("Rules").setRequired(true))
-        .addStringOption(o => o.setName("start").setDescription("Start date").setRequired(true))
-        .addStringOption(o => o.setName("end").setDescription("End date").setRequired(true)),
+        .addStringOption(o => o.setName("start").setDescription("YYYY-MM-DD HH:mm").setRequired(true))
+        .addStringOption(o => o.setName("end").setDescription("YYYY-MM-DD HH:mm").setRequired(true)),
 
     new SlashCommandBuilder()
         .setName("editcollection")
@@ -66,7 +66,7 @@ const commands = [
         .addStringOption(o => o.setName("type").setDescription("Type").setRequired(true))
         .addStringOption(o => o.setName("id").setDescription("Event ID").setRequired(true))
         .addStringOption(o => o.setName("title").setDescription("Title"))
-        .addStringOption(o => o.setName("date").setDescription("Date"))
+        .addStringOption(o => o.setName("date").setDescription("YYYY-MM-DD HH:mm"))
         .addStringOption(o => o.setName("format").setDescription("Format"))
         .addStringOption(o => o.setName("preview").setDescription("Preview URL")),
 
@@ -85,7 +85,6 @@ const rest = new REST({ version: "10" }).setToken(TOKEN);
             Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
             { body: commands }
         );
-        console.log("Slash commands registered.");
     } catch (err) {
         console.error(err);
     }
@@ -99,11 +98,9 @@ client.on("interactionCreate", async (i) => {
     if (!i.isChatInputCommand()) return;
 
     if (i.commandName === "verify") {
-        const robloxId = i.options.getString("robloxid");
-
         try {
             const res = await axios.post(process.env.API_URL + "/api/verify", {
-                robloxId: Number(robloxId),
+                robloxId: Number(i.options.getString("robloxid")),
                 discordId: i.user.id,
                 apiKey: process.env.API_KEY
             });
@@ -112,44 +109,46 @@ client.on("interactionCreate", async (i) => {
                 return i.reply({ content: "Verified successfully!", ephemeral: true });
             }
 
-            return i.reply({
-                content: res.data.message || "Verification failed.",
-                ephemeral: true
-            });
+            return i.reply({ content: res.data.message || "Verification failed.", ephemeral: true });
 
-        } catch (err) {
-            console.error(err);
+        } catch {
             return i.reply({ content: "Server error during verification.", ephemeral: true });
         }
     }
 
-    if (!i.member?.roles?.cache?.has(STAFF_ROLE_ID) && i.commandName !== "verify") {
+    if (!isStaff(i.member) && i.commandName !== "verify") {
         return i.reply({ content: "Staff only.", ephemeral: true });
     }
 
     if (i.commandName === "preparecollection") {
-        const title = i.options.getString("title");
         const date = estToUTC(i.options.getString("date"));
-        const format = i.options.getString("format");
-        const preview = i.options.getString("preview") || "";
 
-        await FashionRelease.create({ title, releaseDate: date, format, previewUrl: preview });
+        if (!date) {
+            return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
+        }
+
+        await FashionRelease.create({
+            title: i.options.getString("title"),
+            releaseDate: date,
+            format: i.options.getString("format"),
+            previewUrl: i.options.getString("preview") || ""
+        });
 
         return i.reply({ content: "Fashion scheduled.", ephemeral: true });
     }
 
     if (i.commandName === "starthunt") {
-        const title = i.options.getString("title");
-        const ugc = i.options.getString("ugc");
-        const rules = i.options.getString("rules");
-
         const start = estToUTC(i.options.getString("start"));
         const end = estToUTC(i.options.getString("end"));
 
+        if (!start || !end) {
+            return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
+        }
+
         await ScavengerHunt.create({
-            title,
-            ugcName: ugc,
-            rules,
+            title: i.options.getString("title"),
+            ugcName: i.options.getString("ugc"),
+            rules: i.options.getString("rules"),
             startDate: start,
             endDate: end
         });
@@ -193,15 +192,18 @@ client.on("interactionCreate", async (i) => {
             return i.reply({ content: "Not found.", ephemeral: true });
         }
 
-        const title = i.options.getString("title");
         const date = i.options.getString("date");
-        const format = i.options.getString("format");
-        const preview = i.options.getString("preview");
 
-        if (title) event.title = title;
-        if (date) event.releaseDate = new Date(date);
-        if (format && event.format !== undefined) event.format = format;
-        if (preview !== undefined && event.previewUrl !== undefined) event.previewUrl = preview;
+        if (i.options.getString("title")) event.title = i.options.getString("title");
+        if (date) {
+            const parsed = estToUTC(date);
+            if (!parsed) {
+                return i.reply({ content: "Invalid date format. Use YYYY-MM-DD HH:mm", ephemeral: true });
+            }
+            event.releaseDate = parsed;
+        }
+        if (i.options.getString("format")) event.format = i.options.getString("format");
+        if (i.options.getString("preview") !== undefined) event.previewUrl = i.options.getString("preview");
 
         await event.save();
 
