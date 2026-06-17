@@ -29,6 +29,12 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID;
 
+const EMOJI = {
+    premium: "<:premium:1457551517476327627>",
+    collection: "<:customer_av:1456642788568469525>",
+    gold: "<:Gold_Avrenzi:1469558139119734930>"
+};
+
 function isStaff(member) {
     return member?.roles?.cache?.has(STAFF_ROLE_ID);
 }
@@ -148,8 +154,7 @@ client.on("interactionCreate", async (i) => {
     }
 
     if (!isStaff(i.member) && i.commandName !== "verify") {
-        await i.reply({ content: "Staff only.", ephemeral: true });
-        return;
+        return i.reply({ content: "Staff only.", ephemeral: true });
     }
 
     if (i.commandName === "preparecollection") {
@@ -197,24 +202,29 @@ client.on("interactionCreate", async (i) => {
 
         const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
 
-        if (!channel) {
-            return i.editReply("Affiliate channel not found.");
-        }
+        if (!channel) return i.editReply("Affiliate channel not found.");
 
-        await channel.send(
-`<@&${process.env.AFFILIATE_ROLE_ID}>
-
-<:Gold_Avrenzi:1469558139119734930> AVRENZI x ${affiliate} — COLLAB RELEASE
-"Luxury in Motion, Style in Devotion"
-
-We are excited to announce our collaboration with ${affiliate}!
-
-Explore the collaboration now.
-${link}
-
-The Avrenzi Team
-`
-        );
+        await channel.send({
+            content: `<@&${process.env.AFFILIATE_ROLE_ID}>`,
+            embeds: [{
+                title: `${EMOJI.gold} AVRENZI x ${affiliate} — COLLAB RELEASE`,
+                description:
+                    `"Luxury in Motion, Style in Devotion"\n\n` +
+                    `We are excited to announce our collaboration with **${affiliate}**!\n\n` +
+                    `Click below to explore the collection.`,
+                color: 0x9B59B6,
+                fields: [
+                    {
+                        name: "🔗 Link",
+                        value: link
+                    }
+                ],
+                footer: {
+                    text: "Avrenzi Collaboration System"
+                },
+                timestamp: new Date()
+            }]
+        });
 
         return i.editReply("Affiliate posted.");
     }
