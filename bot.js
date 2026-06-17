@@ -191,33 +191,34 @@ client.on("interactionCreate", async (i) => {
 
     if (i.commandName === "affiliate") {
         await i.deferReply({ ephemeral: true });
-    
+
         const affiliate = i.options.getString("affiliate");
         const link = i.options.getString("link");
-    
+
         const channel = await client.channels.fetch(process.env.AFFILIATE_CHANNEL_ID).catch(() => null);
-    
+
         if (!channel) {
             return i.editReply("Affiliate channel not found.");
         }
-    
+
         await channel.send(
-    `<@&${process.env.AFFILIATE_ROLE_ID}>
-    
-    <:Gold_Avrenzi:1469558139119734930> AVRENZI x ${affiliate} — COLLAB RELEASE
-    "Luxury in Motion, Style in Devotion"
-    
-    We are excited to announce our collaboration with ${affiliate}!
-    
-    Explore the collaboration now.
-    ${link}
-    
-    The Avrenzi Team
-    `
+`<@&${process.env.AFFILIATE_ROLE_ID}>
+
+<:Gold_Avrenzi:1469558139119734930> AVRENZI x ${affiliate} — COLLAB RELEASE
+"Luxury in Motion, Style in Devotion"
+
+We are excited to announce our collaboration with ${affiliate}!
+
+Explore the collaboration now.
+${link}
+
+The Avrenzi Team
+`
         );
-    
+
         return i.editReply("Affiliate posted.");
     }
+});
 
 (async () => {
     await connectDB();
