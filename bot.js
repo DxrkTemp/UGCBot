@@ -201,10 +201,10 @@ client.on("interactionCreate", async (i) => {
             return i.editReply("Affiliate channel not found.");
         }
     
-        await channel.send(
+    await channel.send(
     `<@&${process.env.AFFILIATE_ROLE_ID}>
     
-    :customer_av: AVRENZI x ${affiliate} — COLLAB RELEASE
+    <:Gold_Avrenzi:1469558139119734930> AVRENZI x ${affiliate} — COLLAB RELEASE
     "Luxury in Motion, Style in Devotion"
     
     We are excited to announce our collaboration with ${affiliate}!
@@ -214,10 +214,7 @@ client.on("interactionCreate", async (i) => {
     
     The Avrenzi Team
     `
-        );
-    
-        return i.editReply("Affiliate posted.");
-    }
+    );
 });
 
 (async () => {
